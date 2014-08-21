@@ -1,0 +1,131 @@
+﻿<!--
+THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+PARTICULAR PURPOSE.
+
+Copyright (c) Microsoft Corporation. All rights reserved
+
+This template is intended for Windows Store apps that require a flat system of navigation.
+
+The flat navigation pattern is often seen in games, browsers, or document creation apps, where the user can
+move quickly between a small number of pages, tabs, or modes that all reside at the same hierarchical level.
+
+The Flat navigation pattern (http://go.microsoft.com/fwlink/?LinkID=316374) is highlighted in
+our App features, start to finish series (http://go.microsoft.com/fwlink/?LinkID=316376).
+
+For an overview of navigation design in Windows Store apps, see http://go.microsoft.com/fwlink/?LinkID=276817.
+For an introduction to the Navigation template, see http://go.microsoft.com/fwlink/?LinkId=268354.
+For an introduction to the Page Control template, see http://go.microsoft.com/fwlink/?LinkId=232511.
+For Avoiding common certification failures, see http://go.microsoft.com/fwlink/?LinkId=232506.
+-->
+<!--
+    NOTE:
+    For this sample, both home.html and page2.html are provided as standalone, localized HTML files.
+    (The rich HTML content can be easily edited in an HTML or text editor.)
+    If possible, avoid localizing app code and use standard string resources in .resjson files.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Edit</title>
+
+    <!-- WinJS references -->
+    <link href="//Microsoft.WinJS.2.0/css/ui-dark.css" rel="stylesheet" />
+    <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
+    <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
+
+    <link href="/css/default.css" rel="stylesheet" />
+    <link href="/pages/main/main.css" rel="stylesheet" />
+    <script src="/pages/main/main.js"></script>
+</head>
+<body>
+    <!-- Page content -->
+    <div class="page home" id="output">
+        <!-- Banner (title area) -->
+        <header role="banner" data-win-res="{attributes: { 'aria-label' : 'bannerAriaLabel'}}">
+            <div class="headlineimagearea">
+                <!-- For this example, we specify a globalized image from the app's package (ms-appx).
+                     For images included in the app package, Windows identifies the correct image through the
+                     file structure and/or decoration to the file name.
+                     See Globalizing your app at http://go.microsoft.com/fwlink/?LinkId=258266. -->
+                <img id="logoimage" src="ms-appx:///images/PlenMe48.png" />
+                <!-- In some cases, you might want to include the back button:
+                     <button data-win-control="WinJS.UI.BackButton"></button>
+                     The back button checks the navigation stack and is automatically enabled or disabled.
+                     Note that the back button is not recommended in the flat navigation pattern.
+                     See Navigation design for Windows Store apps (http://msdn.microsoft.com/en-us/library/windows/apps/hh761500.aspx). -->
+            </div>
+            <!-- Localizable page heading (/strings/<lang spec>). -->
+            <h2 class="headlinetextarea win-type-ellipsis" data-win-res="{textContent: 'homePageHeadline'}"></h2>
+        </header>
+        <!--  -->
+        <section role="main" data-win-res="{attributes: { 'aria-label' : 'mainContentAriaLabel'}}">
+
+            <div class="span2">
+                <h2><span data-bind="text: selectedParent() ? selectedParent().n(): ''"></span></h2>
+
+                <div class="listview-outlook" data-role="listview" data-bind="foreach: selectedParent().c">
+                    <a class="list" data-bind="click: $parent.selectChild, css :{ marked : $data === $root.selectedChild() }">
+                        <div class="list-content">
+
+                            <span class="list-title" data-bind="text: $data.c != undefined ? '+' + n(): n() "></span>
+                            <span class="list-subtitle" data-bind="text: d"></span>
+                            <input data-bind="value: d" />
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div data-bind="visible: showChildren">
+                <div class="span2" data-bind="with:selectedChild">
+                    <h2><span data-bind="text: n"></span></h2>
+                    <div class="listview-outlook" data-role="listview" data-bind="foreach: c">
+                        <a class="list" data-bind="click: $root.selectSubChild">
+                            <div class="list-content">
+                                <span class="list-title" data-bind="text: $data.c != undefined ? '+' + n(): n() "></span>
+                                <span class="list-subtitle" data-bind="text: d"></span>
+
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div id="ContentTemplateItem" data-win-control="WinJS.Binding.Template">
+                <div style="display: -ms-grid; -ms-grid-columns: auto 1fr">
+                    <span data-win-bind="innerText: id"></span>
+                    <div style="-ms-grid-column: 2; -ms-grid-row-align: center; margin-left: 5px" data-win-bind="innerText: content">
+                    </div>
+                </div>
+            </div>
+
+            <div id="TreeNodeTemplate" data-win-control="WinJS.Binding.Template">
+                <div style="display: -ms-grid; -ms-grid-columns: auto 1fr">
+                    <span data-win-bind="innerText: n"></span>
+                    <div style="-ms-grid-column: 2; -ms-grid-row-align: center; margin-left: 5px" data-win-bind="innerText: d">
+                    </div>
+                </div>
+            </div>
+
+            <div id="contentListItems" style="-ms-grid-row: 2; margin: 20px 0px 0px 0px; -ms-grid-row-align: stretch"
+                 data-win-control="WinJS.UI.ListView"
+                 data-win-options="{ itemTemplate: ContentTemplateItem, layout: {type: WinJS.UI.ListLayout} }">
+            </div>
+
+            <div id="parentItems" style="-ms-grid-row: 2; margin: 20px 0px 0px 0px; -ms-grid-row-align: stretch"
+                 data-win-control="WinJS.UI.ListView"
+                 data-win-options="{ itemTemplate: TreeNodeTemplate, layout: {type: WinJS.UI.ListLayout} }">
+            </div>
+
+            <div id="childItems" style="-ms-grid-row: 2; margin: 20px 0px 0px 0px; -ms-grid-row-align: stretch"
+                 data-win-control="WinJS.UI.ListView"
+                 data-win-options="{ itemTemplate: TreeNodeTemplate, layout: {type: WinJS.UI.ListLayout} }">
+            </div>
+          
+        </section>
+    </div>
+</body>
+</html>
