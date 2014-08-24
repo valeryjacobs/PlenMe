@@ -16,7 +16,7 @@ namespace PlenMe.Helpers
         {
             Windows.UI.Xaml.Controls.WebView webView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
 
-            if (WebContentTemplate.HTML != null)
+            if (WebContentTemplate.HTML != null && webView != null)
             {
                 webView.NavigateToString(WebContentTemplate.HTML.Replace("[--CONTENT--]", value.ToString()));
             }

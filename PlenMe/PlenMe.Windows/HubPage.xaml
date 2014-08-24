@@ -12,6 +12,15 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <Style  TargetType="Button">
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <TransitionCollection>
+                        <EntranceThemeTransition/>
+                    </TransitionCollection>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <!-- Grid-appropriate 310 by 260 pixel item template as seen in section 4 -->
         <DataTemplate x:Key="Standard310x260ItemTemplate">
             <Grid Height="250" Width="310" Margin="5,10,5,10">
@@ -61,10 +70,10 @@
                         VerticalAlignment="Top" IsHitTestVisible="false" TextWrapping="NoWrap" />
                 </Grid>
             </Hub.Header>
-            <HubSection Width="800" Margin="0,0,80,0" >
+            <HubSection Margin="0,0,0,0" >
                 <DataTemplate>
 
-                    <Grid Width="780">
+                    <Grid >
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
                             <ColumnDefinition></ColumnDefinition>
@@ -80,17 +89,17 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" Margin="5">
                                         <TextBlock FontWeight="Bold"  Text="{Binding Title}"></TextBlock>
-                                        <TextBlock  Text="{Binding Description}"></TextBlock>
+                                        <TextBlock TextWrapping="Wrap"   Text="{Binding Description}"></TextBlock>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
-                        <ListView Grid.Column="1" ItemsSource="{Binding ChildList}"  SelectionChanged="Child_Selected" Height="300" SelectedValue="{Binding ChildSelected}"  >
+                        <ListView Grid.Column="1" ItemsSource="{Binding ChildList}" x:Name="childListView" SelectionChanged="Child_Selected" Height="300" SelectedValue="{Binding ChildSelected}"  >
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" Margin="5">
                                         <TextBlock  FontWeight="Bold"  Text="{Binding Title}"></TextBlock>
-                                        <TextBlock  Text="{Binding Description}"></TextBlock>
+                                        <TextBlock TextWrapping="Wrap" Text="{Binding Description}"></TextBlock>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -100,7 +109,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" Margin="5">
                                         <TextBlock  FontWeight="Bold"   Text="{Binding Title}"></TextBlock>
-                                        <TextBlock  Text="{Binding Description}"></TextBlock>
+                                        <TextBlock  TextWrapping="Wrap"  Text="{Binding Description}"></TextBlock>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -112,6 +121,9 @@
                             <Button Content="Up" Click="Up" />
                             <Button Content="Save" Click="Save" />
                             <Button Content="Delete" Click="DeleteNode" />
+                            <Button Content="EditContent" Click="EditContent" />
+                            <Button Content="Move up" Click="MoveUp" />
+                            <Button Content="Move down" Click="MoveDown" />
                         </StackPanel>
 
                         <WebView Grid.Row="2" Grid.ColumnSpan="3" MinHeight="200" DefaultBackgroundColor="#1D1D1D"   Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
@@ -160,13 +172,59 @@
                 </StackPanel>
             </Border>
         </Popup>
-        <Popup x:Name="editNodePopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding SelectedNode}">
+        <Popup x:Name="editNodePopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding TargetNode}" >
             <Popup.ChildTransitions>
                 <TransitionCollection>
                     <PaneThemeTransition />
                 </TransitionCollection>
             </Popup.ChildTransitions>
             <Border BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" Width="646">
+                <Grid>
+                    <Grid.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Margin" Value="5" ></Setter>
+                            <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+                           
+                            <Setter Property="FontSize" Value="26"></Setter>
+                        </Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Margin" Value="5"></Setter>
+                            <Setter Property="Height" Value="30"></Setter>
+                            <Setter Property="HorizontalAlignment" Value="Stretch" ></Setter>
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Title" Margin="10" Foreground="White" />
+                    <TextBox Grid.Column="1" TabIndex="0" x:Name="nodeTitle" Text="{Binding Mode=TwoWay,Path=Title}" ></TextBox>
+
+
+                    <TextBlock Grid.Row="1"  Text="Description" Foreground="White" />
+                    <TextBox  Grid.Row="1" TabIndex="1" Grid.Column="1" x:Name="nodeDescrition" Text="{Binding Mode=TwoWay,Path=Description}"   />
+
+                    <Button Grid.Row="2" Grid.ColumnSpan="2" Margin="10,5,5,5" x:Name="editNodeContent" Foreground="White" Content="Edit content"/>
+
+                    <Button Grid.Row="3" Click="NodeEditOK_Click" Margin="5,10,5,5"  Foreground="White"  Content="OK"/>
+                </Grid>
+            </Border>
+        </Popup>
+
+        <Popup x:Name="editContentPopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding NodeContent}">
+            <Popup.ChildTransitions>
+                <TransitionCollection >
+                    <PaneThemeTransition />
+                </TransitionCollection>
+            </Popup.ChildTransitions>
+            <Border BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" >
                 <Grid>
                     <Grid.Resources>
                         <Style TargetType="TextBlock">
@@ -189,16 +247,10 @@
                         <RowDefinition></RowDefinition>
 
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Title" Margin="10" Foreground="White" FontSize="25" />
-                    <TextBox Grid.Column="1" x:Name="nodeTitle" Text="{Binding Mode=TwoWay,Path=Title}" ></TextBox>
 
+                    <WebView Margin="10" Height="580" Width="960"  DefaultBackgroundColor="#1D1D1D"  Grid.Row="1" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='contentEditView'}"  x:Name="contentEditView"></WebView>
 
-                    <TextBlock Grid.Row="1"  Text="Description" Foreground="White"  FontSize="25" />
-                    <TextBox  Grid.Row="1" Grid.Column="1" x:Name="nodeDescrition" Text="{Binding Mode=TwoWay,Path=Description}"   />
-
-                    <Button Grid.Row="2" Grid.ColumnSpan="2" x:Name="editNodeContent" Foreground="White" Content="Edit content"/>
-
-                    <Button Grid.Row="3" Click="NodeEditOK_Click"  Foreground="White"  Content="Save"/>
+                    <Button Grid.Row="3" Click="NodeEditOK_Click"  Foreground="White"  Content="OK"/>
                 </Grid>
             </Border>
         </Popup>

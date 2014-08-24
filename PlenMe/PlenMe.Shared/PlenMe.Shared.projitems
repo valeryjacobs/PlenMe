@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\SampleDataSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\WebContentTemplate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ControlLocater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\FrameworkElementExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WebContentConverter.cs" />
     <Content Include="$(MSBuildThisFileDirectory)DataModel\SampleData.json" />

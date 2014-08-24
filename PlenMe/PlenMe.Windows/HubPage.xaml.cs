@@ -42,6 +42,38 @@ namespace PlenMe
         //private MobileServiceCollection<TodoItem, TodoItem> items;
         //private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
 
+
+        protected override void OnKeyDown(KeyRoutedEventArgs e)
+        {
+            if (e.OriginalSource is TextBox || e.OriginalSource is WebView)
+            {
+                base.OnKeyDown(e);
+            }
+            else
+            {
+                switch (e.Key)
+                {
+                    case Windows.System.VirtualKey.C:
+                        AddChildNode();
+                        break;
+                    case Windows.System.VirtualKey.S:
+                        AddSiblingNode();
+                        break;
+                    case Windows.System.VirtualKey.X:
+                        DeleteNode();
+                        break;
+                    case Windows.System.VirtualKey.E:
+                        EditNode();
+                        break;
+                    case Windows.System.VirtualKey.Enter:
+                        if (editNodePopup.IsOpen) editNodePopup.IsOpen = false;
+                        
+                        break;
+                }
+            }
+
+
+        }
         private async void RefreshContentItems()
         {
             MobileServiceInvalidOperationException exception = null;
@@ -157,20 +189,50 @@ namespace PlenMe
 
 
         private void EditNode(object sender, RoutedEventArgs e)
+        { EditNode(); }
+
+        private void EditNode()
         {
+            this.DefaultViewModel["TargetNode"] = this.DefaultViewModel["SelectedNode"];
             if (!editNodePopup.IsOpen)
             {
-                editNodePopup.HorizontalOffset = Window.Current.Bounds.Width / 2;
-                editNodePopup.VerticalOffset = Window.Current.Bounds.Height - 500;
+                editNodePopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
+                editNodePopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
                 editNodePopup.IsOpen = true;
+                nodeTitle.Focus(FocusState.Keyboard);
+            }
+        }
+
+        private void EditContent(object sender, RoutedEventArgs e)
+        {
+            EditContent();
+        }
+
+        private void EditContent()
+        {
+            if (!editContentPopup.IsOpen)
+            {
+                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
+                editContentPopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
+                editContentPopup.IsOpen = true;
             }
         }
 
         private void DeleteNode(object sender, RoutedEventArgs e)
         {
-           var nodeToBeRemoved =  this.DefaultViewModel["SelectedNode"] as Node;
+            DeleteNode();
+        }
 
-           nodeToBeRemoved.Parent.Children.Remove(nodeToBeRemoved);
+        private void DeleteNode()
+        {
+            var nodeToBeRemoved = this.DefaultViewModel["SelectedNode"] as Node;
+
+            nodeToBeRemoved.Parent.Children.Remove(nodeToBeRemoved);
+        }
+
+        private void AddSiblingNode()
+        {
+            AddNode(false);
         }
 
         private void AddSiblingNode(object sender, RoutedEventArgs e)
@@ -180,23 +242,75 @@ namespace PlenMe
 
         private void AddChildNode(object sender, RoutedEventArgs e)
         {
+            AddChildNode();
+        }
+
+        private void AddChildNode()
+        {
             AddNode(true);
         }
 
-
         private void Up(object sender, RoutedEventArgs e)
         {
+            Up();
+        }
+
+        private void MoveOrderUp(object sender, RoutedEventArgs e)
+        {
+            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
+            var index =targetNode.Parent.Children.IndexOf(targetNode);
+            targetNode.Parent.Children.Move(index,index--);
+        }
+
+        private void MoveOrderDown(object sender, RoutedEventArgs e)
+        {
+            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
+            var index = targetNode.Parent.Children.IndexOf(targetNode);
+            targetNode.Parent.Children.Move(index, index++);
+        }
+
+        private void MoveUp(object sender, RoutedEventArgs e)
+        {
+            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
+            targetNode.Parent.Parent.Children.Add(targetNode);
+            targetNode.Parent.Children.Remove(targetNode);
+        }
+
+        private void MoveDown(object sender, RoutedEventArgs e)
+        {
+            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
+            targetNode.Parent.Parent.Children.Add(targetNode);
+            targetNode.Parent.Children.Remove(targetNode);
+        }
+
+        private void Up()
+        {
+            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == _rootNode) return;
+
             this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
             this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
             this.DefaultViewModel["ParentList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Parent.Children;
+
+            this.DefaultViewModel["SubChildSelected"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent;
+            this.DefaultViewModel["ChildSelected"] = ((Node)this.DefaultViewModel["ChildSelected"]).Parent;
+            this.DefaultViewModel["ParentSelected"] = ((Node)this.DefaultViewModel["ParentSelected"]).Parent;
         }
+
 
         private void Save(object sender, RoutedEventArgs e)
         {
+            Save();
+        }
+
+        private async void Save()
+        {
 
             var jsonRootNode = new JsonNode();
-            var jsonObject = BuildJSON(jsonRootNode,_rootNode);
-            
+            var jsonObject = BuildJSON(jsonRootNode, _rootNode);
+
+            await mindmapTable.InsertAsync(new MindMap { Name = _currentMindMap.Name + "_BACKUP", Id = Guid.NewGuid().ToString(), Content = _currentMindMap.Content });
+           
+
             _currentMindMap.Content = JsonConvert.SerializeObject(jsonObject);
             //await App.MobileService.GetTable<Item>().InsertAsync(item);
             UpdateMindMap(_currentMindMap);
@@ -204,10 +318,10 @@ namespace PlenMe
 
         private async void UpdateMindMap(MindMap mindmap)
         {
-            await mindmapTable.UpdateAsync(mindmap);
+             await mindmapTable.UpdateAsync(mindmap);
         }
 
-   
+
 
         private void AddNode(bool addAsChild)
         {
@@ -234,13 +348,14 @@ namespace PlenMe
                 target.Parent.Children.Add(newNode);
             }
 
-            this.DefaultViewModel["SelectedNode"] = newNode;
+            this.DefaultViewModel["TargetNode"] = newNode;
 
             if (!editNodePopup.IsOpen)
             {
-                editNodePopup.HorizontalOffset = Window.Current.Bounds.Width / 2;
-                editNodePopup.VerticalOffset = Window.Current.Bounds.Height - 500;
+                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
+                editNodePopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
                 editNodePopup.IsOpen = true;
+                nodeTitle.Focus(FocusState.Keyboard);
             }
         }
 
@@ -263,9 +378,6 @@ namespace PlenMe
                 logincontrol1.IsOpen = true;
             }
         }
-
-
-
 
         /// <summary>
         /// Gets the NavigationHelper used to aid in navigation and process lifetime management.
@@ -338,7 +450,6 @@ namespace PlenMe
         }
 
 
-
         #region NavigationHelper registration
 
         /// <summary>
@@ -357,6 +468,7 @@ namespace PlenMe
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            Save();
             this.navigationHelper.OnNavigatedFrom(e);
         }
 
@@ -366,25 +478,27 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-                var selectedNode = ((Node)e.AddedItems[0]);
-                if (selectedNode == null) return;
-             
-                this.DefaultViewModel["SelectedNode"] = selectedNode;
-                this.DefaultViewModel["ParentSelected"] = selectedNode;
+            var selectedNode = ((Node)e.AddedItems[0]);
+            if (selectedNode == null) return;
 
-                ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[0] = selectedNode;
-                this.DefaultViewModel["ChildList"] = selectedNode.Children;
+            this.DefaultViewModel["SelectedNode"] = selectedNode;
+            this.DefaultViewModel["ParentSelected"] = selectedNode;
 
-                if (selectedNode.Children != null && selectedNode.Children.Count > 0)
-                {
-                    this.DefaultViewModel["SubChildList"] = selectedNode.Children[0].Children;
-                }
-                else
-                {
-                    this.DefaultViewModel["SubChildList"] = null;
-                }
+            ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[0] = selectedNode;
+            this.DefaultViewModel["ChildList"] = selectedNode.Children;
+           // childListView.
 
-                this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();   
+            if (selectedNode.Children != null && selectedNode.Children.Count > 0)
+            {
+                this.DefaultViewModel["SubChildList"] = selectedNode.Children[0].Children;
+
+            }
+            else
+            {
+                this.DefaultViewModel["SubChildList"] = null;
+            }
+
+            this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
         }
 
         private void Child_Selected(object sender, SelectionChangedEventArgs e)
@@ -394,7 +508,7 @@ namespace PlenMe
             var selectedNode = ((Node)e.AddedItems[0]);
             if (selectedNode == null) return;
 
-          
+
             this.DefaultViewModel["SelectedNode"] = selectedNode;
             this.DefaultViewModel["ChildSelected"] = selectedNode;
             ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[1] = selectedNode;
@@ -427,8 +541,10 @@ namespace PlenMe
                 }
                 this.DefaultViewModel["ChildList"] = selectedNode.Parent.Children;
                 this.DefaultViewModel["SubChildList"] = selectedNode.Children;
-                this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
+
             }
+
+            this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
         }
     }
 }
