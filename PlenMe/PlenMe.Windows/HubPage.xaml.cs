@@ -19,6 +19,8 @@ using PlenMe.DataModel;
 using Windows.UI.Popups;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+using PlenMe.Helpers;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -29,10 +31,11 @@ namespace PlenMe
     /// </summary>
     public sealed partial class HubPage : Page
     {
+        private StreamUriWinRTResolver streamResolver;
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
-        public Node _rootNode;
-        public MindMap _currentMindMap;
+        public Node rootNode;
+        public MindMap currentMindMap;
 
         private MobileServiceCollection<Content, Content> items;
         private MobileServiceCollection<MindMap, MindMap> mindmaps;
@@ -42,6 +45,13 @@ namespace PlenMe
         //private MobileServiceCollection<TodoItem, TodoItem> items;
         //private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
 
+        public HubPage()
+        {
+            streamResolver = new StreamUriWinRTResolver();
+            this.InitializeComponent();
+            this.navigationHelper = new NavigationHelper(this);
+            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
+        }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
@@ -67,13 +77,14 @@ namespace PlenMe
                         break;
                     case Windows.System.VirtualKey.Enter:
                         if (editNodePopup.IsOpen) editNodePopup.IsOpen = false;
-                        
+
                         break;
                 }
             }
 
 
         }
+
         private async void RefreshContentItems()
         {
             MobileServiceInvalidOperationException exception = null;
@@ -99,6 +110,15 @@ namespace PlenMe
                 WebContentTemplate.HTML = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == "13").Single().Data;
                 // ListItems.ItemsSource = items;
                 //this.ButtonSave.IsEnabled = true;
+                //webView.Navigate(new Uri("http://www.tinymce.com/tryit/full.php"));
+                //webView.NavigateToString(items.Where(x => x.Id == "HTMLEditorTemplateTest").Single().Data);
+
+                Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/index.html");
+                webView.NavigateToLocalStreamUri(url, streamResolver);
+
+
+
+                
             }
         }
 
@@ -120,7 +140,7 @@ namespace PlenMe
             }
             else
             {
-                _currentMindMap = mindmaps[0];
+                currentMindMap = mindmaps[0];
                 dynamic json = JValue.Parse(mindmaps[0].Content);
 
                 this.DefaultViewModel["MindMap"] = mindmaps[0];
@@ -128,9 +148,9 @@ namespace PlenMe
                 var rootNode = new Node();
                 var tree = BuildTree(rootNode, json);
 
-                _rootNode = tree;
-                this.DefaultViewModel["RootNode"] = _rootNode;
-                this.DefaultViewModel["ParentList"] = _rootNode.Children;
+                rootNode = tree;
+                this.DefaultViewModel["RootNode"] = rootNode;
+                this.DefaultViewModel["ParentList"] = rootNode.Children;
                 this.DefaultViewModel["JSON"] = json;
                 this.DefaultViewModel["NodeContent"] = new Content { Data = "Test data" };
                 this.DefaultViewModel["SelectionStack"] = new Dictionary<int, Node>();
@@ -187,6 +207,38 @@ namespace PlenMe
             return newNode;
         }
 
+        private void EditContent(object sender, RoutedEventArgs e)
+        {
+            if (this.DefaultViewModel["SelectedNode"] == null) return;
+
+            var targetNode = this.DefaultViewModel["SelectedNode"] as Node;
+
+            WebContentTemplate.HTML = ((List<Content>)this.defaultViewModel["ContentItems"]).Where(x=>x.Id == "HTMLEditorTemplate").Single().Data;
+
+            if (targetNode.ContentId == null || targetNode.ContentId == "1")
+            {
+                var newContent = new Content { Id = Guid.NewGuid().ToString() };
+
+                targetNode.ContentId = newContent.Id;
+                contentTable.InsertAsync(newContent);
+                ((List<Content>)this.DefaultViewModel["ContentItems"]).Add(newContent);
+            }
+
+
+
+            if (!editContentPopup.IsOpen)
+            {
+
+                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
+                editContentPopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
+                editContentPopup.IsOpen = true;
+            }
+        }
+
+        private void ClosePopup(object sender, RoutedEventArgs e)
+        {
+            editContentPopup.IsOpen = false;
+        }
 
         private void EditNode(object sender, RoutedEventArgs e)
         { EditNode(); }
@@ -203,20 +255,6 @@ namespace PlenMe
             }
         }
 
-        private void EditContent(object sender, RoutedEventArgs e)
-        {
-            EditContent();
-        }
-
-        private void EditContent()
-        {
-            if (!editContentPopup.IsOpen)
-            {
-                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
-                editContentPopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
-                editContentPopup.IsOpen = true;
-            }
-        }
 
         private void DeleteNode(object sender, RoutedEventArgs e)
         {
@@ -258,15 +296,25 @@ namespace PlenMe
         private void MoveOrderUp(object sender, RoutedEventArgs e)
         {
             Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
-            var index =targetNode.Parent.Children.IndexOf(targetNode);
-            targetNode.Parent.Children.Move(index,index--);
+            var index = targetNode.Parent.Children.IndexOf(targetNode);
+
+
+            if (index > 0)
+            {
+                targetNode.Parent.Children.Move(index, index - 1);
+            }
         }
 
         private void MoveOrderDown(object sender, RoutedEventArgs e)
         {
+
             Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
             var index = targetNode.Parent.Children.IndexOf(targetNode);
-            targetNode.Parent.Children.Move(index, index++);
+
+            if (index < targetNode.Parent.Children.Count() - 1)
+            {
+                targetNode.Parent.Children.Move(index, index + 1);
+            }
         }
 
         private void MoveUp(object sender, RoutedEventArgs e)
@@ -285,7 +333,7 @@ namespace PlenMe
 
         private void Up()
         {
-            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == _rootNode) return;
+            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == rootNode) return;
 
             this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
             this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
@@ -306,19 +354,19 @@ namespace PlenMe
         {
 
             var jsonRootNode = new JsonNode();
-            var jsonObject = BuildJSON(jsonRootNode, _rootNode);
+            var jsonObject = BuildJSON(jsonRootNode, rootNode);
 
-            await mindmapTable.InsertAsync(new MindMap { Name = _currentMindMap.Name + "_BACKUP", Id = Guid.NewGuid().ToString(), Content = _currentMindMap.Content });
-           
+            await mindmapTable.InsertAsync(new MindMap { Name = currentMindMap.Name + "_BACKUP", Id = Guid.NewGuid().ToString(), Content = currentMindMap.Content });
 
-            _currentMindMap.Content = JsonConvert.SerializeObject(jsonObject);
+
+            currentMindMap.Content = JsonConvert.SerializeObject(jsonObject);
             //await App.MobileService.GetTable<Item>().InsertAsync(item);
-            UpdateMindMap(_currentMindMap);
+            UpdateMindMap(currentMindMap);
         }
 
         private async void UpdateMindMap(MindMap mindmap)
         {
-             await mindmapTable.UpdateAsync(mindmap);
+            await mindmapTable.UpdateAsync(mindmap);
         }
 
 
@@ -330,7 +378,7 @@ namespace PlenMe
                 target = (Node)this.DefaultViewModel["SelectedNode"];
 
             if (target == null)
-                target = _rootNode;
+                target = rootNode;
 
             var newNode = new Node { };
             if (addAsChild)
@@ -395,12 +443,7 @@ namespace PlenMe
             get { return this.defaultViewModel; }
         }
 
-        public HubPage()
-        {
-            this.InitializeComponent();
-            this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-        }
+   
 
         /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
@@ -463,6 +506,8 @@ namespace PlenMe
         /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            ControlLocater.ContentEditor = contentEditView;
+
             this.navigationHelper.OnNavigatedTo(e);
         }
 
@@ -486,7 +531,7 @@ namespace PlenMe
 
             ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[0] = selectedNode;
             this.DefaultViewModel["ChildList"] = selectedNode.Children;
-           // childListView.
+            // childListView.
 
             if (selectedNode.Children != null && selectedNode.Children.Count > 0)
             {

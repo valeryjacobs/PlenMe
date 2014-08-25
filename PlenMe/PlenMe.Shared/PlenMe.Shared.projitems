@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\SampleDataSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataModel\WebContentTemplate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\StreamUriWinRTResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ControlLocater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\FrameworkElementExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WebContentConverter.cs" />
@@ -32,6 +33,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)Common\RelayCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\SuspensionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\ObservableDictionary.cs" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrap.min.css" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\index.html" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\content.min.css" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\skin.min.css" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\tinymce.eot" />
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en-US\Resources.resw" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrap.min.js" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\jquery-1.11.1.min.js" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\tinymce.min.js" />
   </ItemGroup>
 </Project>

@@ -124,6 +124,8 @@
                             <Button Content="EditContent" Click="EditContent" />
                             <Button Content="Move up" Click="MoveUp" />
                             <Button Content="Move down" Click="MoveDown" />
+                            <Button Content="Order up" Click="MoveOrderUp" />
+                            <Button Content="Order down" Click="MoveOrderDown" />
                         </StackPanel>
 
                         <WebView Grid.Row="2" Grid.ColumnSpan="3" MinHeight="200" DefaultBackgroundColor="#1D1D1D"   Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
@@ -137,11 +139,11 @@
             </HubSection>
             <HubSection Width="800" DataContext="{Binding NodeContent}" Header="{Binding Title}" >
                 <DataTemplate>
-                    <WebView Height="580" Width="760"  DefaultBackgroundColor="#1D1D1D"  Grid.Row="1" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
-                </DataTemplate>
+                    </DataTemplate>
             </HubSection>
 
         </Hub>
+        <WebView  Height="580" Width="760"  DefaultBackgroundColor="#1D1D1D"    x:Name="webView"></WebView>
         <Popup x:Name="logincontrol1" IsOpen="False" IsLightDismissEnabled="True">
             <Popup.ChildTransitions>
                 <TransitionCollection>
@@ -211,7 +213,7 @@
                     <TextBlock Grid.Row="1"  Text="Description" Foreground="White" />
                     <TextBox  Grid.Row="1" TabIndex="1" Grid.Column="1" x:Name="nodeDescrition" Text="{Binding Mode=TwoWay,Path=Description}"   />
 
-                    <Button Grid.Row="2" Grid.ColumnSpan="2" Margin="10,5,5,5" x:Name="editNodeContent" Foreground="White" Content="Edit content"/>
+                    <Button Grid.Row="2" Grid.ColumnSpan="2" Margin="10,5,5,5" Click="EditContent" Foreground="White" Content="Edit content"/>
 
                     <Button Grid.Row="3" Click="NodeEditOK_Click" Margin="5,10,5,5"  Foreground="White"  Content="OK"/>
                 </Grid>
@@ -226,31 +228,18 @@
             </Popup.ChildTransitions>
             <Border BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" >
                 <Grid>
-                    <Grid.Resources>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Margin" Value="3" ></Setter>
-                            <Setter Property="HorizontalAlignment" Value="Left" ></Setter>
-                        </Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Margin" Value="3"></Setter>
-                            <Setter Property="HorizontalAlignment" Value="Left" ></Setter>
-                        </Style>
-                    </Grid.Resources>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition></ColumnDefinition>
-                        <ColumnDefinition></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
+                    
+                   
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
+                       
 
                     </Grid.RowDefinitions>
 
-                    <WebView Margin="10" Height="580" Width="960"  DefaultBackgroundColor="#1D1D1D"  Grid.Row="1" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='contentEditView'}"  x:Name="contentEditView"></WebView>
+                    <WebView Margin="10" Height="500" Width="500"  DefaultBackgroundColor="#1D1D1D" Grid.Row="0" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='contentEditView'}"  x:Name="contentEditView"></WebView>
 
-                    <Button Grid.Row="3" Click="NodeEditOK_Click"  Foreground="White"  Content="OK"/>
+                    <Button Grid.Row="1" Foreground="White" Click="ClosePopup" Content="OK"/>
                 </Grid>
             </Border>
         </Popup>
