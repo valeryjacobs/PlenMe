@@ -40,6 +40,7 @@
             </Grid>
         </DataTemplate>
         <helpers:WebContentConverter x:Key="WebContentConverter" />
+        <helpers:WebViewContentConverter x:Key="WebViewContentConverter" />
     </Page.Resources>
 
     <!--
@@ -128,7 +129,7 @@
                             <Button Content="Order down" Click="MoveOrderDown" />
                         </StackPanel>
 
-                        <WebView Grid.Row="2" Grid.ColumnSpan="3" MinHeight="200" DefaultBackgroundColor="#1D1D1D"   Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
+                        <WebView  DataContext="{Binding NodeContent}" Grid.Row="2" Grid.ColumnSpan="3" MinHeight="200" DefaultBackgroundColor="#1D1D1D"   Tag="{Binding Data, Converter={StaticResource WebViewContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
                     </Grid>
                     <!--<TextBlock  Height="20" DataContext="{Binding RootNode}" Text="{Binding Title}"></TextBlock>
                         <TextBlock  Height="20" DataContext="{Binding NodeContent}" Text="{Binding Data}"></TextBlock>-->
@@ -137,13 +138,12 @@
 
                 </DataTemplate>
             </HubSection>
-            <HubSection Width="800" DataContext="{Binding NodeContent}" Header="{Binding Title}" >
-                <DataTemplate>
-                    </DataTemplate>
+            <HubSection Width="100" DataContext="{Binding NodeContent}" Header="{Binding Title}" >
+                <DataTemplate></DataTemplate>
             </HubSection>
 
         </Hub>
-        <WebView  Height="580" Width="760"  DefaultBackgroundColor="#1D1D1D"    x:Name="webView"></WebView>
+        <!--<WebView  Height="580" Width="760"  DefaultBackgroundColor="#1D1D1D"    x:Name="webView"></WebView>-->
         <Popup x:Name="logincontrol1" IsOpen="False" IsLightDismissEnabled="True">
             <Popup.ChildTransitions>
                 <TransitionCollection>

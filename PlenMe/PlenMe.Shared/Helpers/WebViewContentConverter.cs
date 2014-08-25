@@ -9,22 +9,20 @@ using PlenMe.DataModel;
 
 namespace PlenMe.Helpers
 {
-    public class WebContentConverter : IValueConverter
+    public class WebViewContentConverter : IValueConverter
     {
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             Windows.UI.Xaml.Controls.WebView webView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
 
-            if (webView == null)
-            {
-                webView = ControlLocater.ContentEditor;
-                Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/index.html");
-                webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
 
-                webView.DOMContentLoaded += (x, y) => { webView.InvokeScript("SetContent", new string[] { value.ToString() }); };
+            if (value == null) value = "";
+            if (WebContentTemplate.HTML != null && webView != null)
+            {
+                webView.NavigateToString(WebContentTemplate.HTML.Replace("[--CONTENT--]", value.ToString()));
             }
-            
+
             return "";
         }
 

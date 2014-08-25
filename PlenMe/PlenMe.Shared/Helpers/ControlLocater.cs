@@ -14,6 +14,17 @@ namespace PlenMe.Helpers
             get { return _contentEditor; }
             set { _contentEditor = value; }
         }
+
+        private static StreamUriWinRTResolver _streamResolver;
+
+
+        public static StreamUriWinRTResolver StreamResolver
+        {
+            get { return _streamResolver; }
+            set { _streamResolver = value; }
+        }
+
+        
         
     }
 }

@@ -25,6 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ControlLocater.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\FrameworkElementExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\WebContentConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\WebViewContentConverter.cs" />
     <Content Include="$(MSBuildThisFileDirectory)DataModel\SampleData.json" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\LightGray.png" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\MediumGray.png" />

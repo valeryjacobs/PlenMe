@@ -113,8 +113,7 @@ namespace PlenMe
                 //webView.Navigate(new Uri("http://www.tinymce.com/tryit/full.php"));
                 //webView.NavigateToString(items.Where(x => x.Id == "HTMLEditorTemplateTest").Single().Data);
 
-                Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/index.html");
-                webView.NavigateToLocalStreamUri(url, streamResolver);
+                
 
 
 
@@ -209,7 +208,7 @@ namespace PlenMe
 
         private void EditContent(object sender, RoutedEventArgs e)
         {
-            if (this.DefaultViewModel["SelectedNode"] == null) return;
+            if (!this.DefaultViewModel.ContainsKey("SelectedNode")) return;
 
             var targetNode = this.DefaultViewModel["SelectedNode"] as Node;
 
@@ -235,8 +234,15 @@ namespace PlenMe
             }
         }
 
-        private void ClosePopup(object sender, RoutedEventArgs e)
+        private async void ClosePopup(object sender, RoutedEventArgs e)
         {
+
+           string newContent = await  ControlLocater.ContentEditor.InvokeScriptAsync("GetContent",null);
+
+           var selectedNode = (Node)this.defaultViewModel["SelectedNode"];
+
+           ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single().Data = newContent;
+
             editContentPopup.IsOpen = false;
         }
 
@@ -507,6 +513,7 @@ namespace PlenMe
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             ControlLocater.ContentEditor = contentEditView;
+            ControlLocater.StreamResolver = new StreamUriWinRTResolver();
 
             this.navigationHelper.OnNavigatedTo(e);
         }
