@@ -42,11 +42,30 @@
         <helpers:WebContentConverter x:Key="WebContentConverter" />
         <helpers:WebViewContentConverter x:Key="WebViewContentConverter" />
     </Page.Resources>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="Add sibling" Icon="Add" Click="AddSiblingNode"/>
+            <AppBarButton Label="Add child" Icon="Add" Click="AddChildNode"/>
+            <AppBarButton Label="Edit node" Icon="Edit" Click="EditNode"/>
+            <AppBarButton Label="Delete node" Icon="Delete" Click="DeleteNode"/>
+            <AppBarButton Label="Move up" Icon="MoveToFolder" Click="MoveUp"/>
+            <AppBarButton Label="Move downup" Icon="Delete" Click="MoveDown"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Label="Edit" Icon="Edit" Click="EditNode"/>
+                <AppBarButton Label="Remove" Icon="Remove" Click="EditNode"/>
+                <AppBarButton Label="Add" Icon="Add" Click="EditNode"/>
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+    </Page.BottomAppBar>
 
     <!--
     This grid acts as a root panel for the page.
   -->
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
         <Grid.ChildrenTransitions>
             <TransitionCollection>
                 <EntranceThemeTransition/>
@@ -73,7 +92,6 @@
             </Hub.Header>
             <HubSection Margin="0,0,0,0" >
                 <DataTemplate>
-
                     <Grid >
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
@@ -83,8 +101,9 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"></RowDefinition>
                             <RowDefinition Height="Auto"></RowDefinition>
-                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="0"></RowDefinition>
                         </Grid.RowDefinitions>
+                        <ProgressBar x:Name="progress" IsIndeterminate="True" Height="10" Width="200"/>
                         <ListView ItemsSource="{Binding ParentList}" SelectionMode="Single" SelectionChanged="Parent_Selected"  Height="300" SelectedValue="{Binding ParentSelected}" >
                             <ListView.ItemTemplate>
                                 <DataTemplate>
@@ -127,53 +146,16 @@
                             <Button Content="Move down" Click="MoveDown" />
                             <Button Content="Order up" Click="MoveOrderUp" />
                             <Button Content="Order down" Click="MoveOrderDown" />
+                            <Button Content="+" Click="ZoomIn" />
+                            <Button Content="-" Click="ZoomOut" />
+                            <Slider Margin="8" Width="100" ValueChanged="ZoomSlider_ValueChanged" Maximum="400" Minimum="70" Value="180"   >
+                            </Slider>
                         </StackPanel>
 
-                        <WebView  DataContext="{Binding NodeContent}" Grid.Row="2" Grid.ColumnSpan="3" MinHeight="200" DefaultBackgroundColor="#1D1D1D"   Tag="{Binding Data, Converter={StaticResource WebViewContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
                     </Grid>
-                    <!--<TextBlock  Height="20" DataContext="{Binding RootNode}" Text="{Binding Title}"></TextBlock>
-                        <TextBlock  Height="20" DataContext="{Binding NodeContent}" Text="{Binding Data}"></TextBlock>-->
-
-
-
                 </DataTemplate>
             </HubSection>
-            <HubSection Width="100" DataContext="{Binding NodeContent}" Header="{Binding Title}" >
-                <DataTemplate></DataTemplate>
-            </HubSection>
-
         </Hub>
-        <!--<WebView  Height="580" Width="760"  DefaultBackgroundColor="#1D1D1D"    x:Name="webView"></WebView>-->
-        <Popup x:Name="logincontrol1" IsOpen="False" IsLightDismissEnabled="True">
-            <Popup.ChildTransitions>
-                <TransitionCollection>
-                    <PaneThemeTransition />
-                </TransitionCollection>
-            </Popup.ChildTransitions>
-            <Border BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" x:Name="RootPopupBorder">
-                <StackPanel Orientation="Vertical" Background="Pink" Height="400"  x:Name="pop" >
-                    <StackPanel>
-                        <TextBlock Text="Sign In With an Account"  HorizontalAlignment="Center" Foreground="White" FontSize="25" Margin="0,20,0,0" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,50" HorizontalAlignment="Center">
-                        <TextBlock Text="Email Id" Margin="10" Foreground="White" FontSize="25" />
-                        <TextBox x:Name="id" IsSpellCheckEnabled="True" Height="40" Margin="13,1" Width="408" InputScope="EmailSmtpAddress" >
-                        </TextBox>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="Password" Foreground="White"  FontSize="25" />
-                        <PasswordBox  x:Name="pwd"  IsPasswordRevealButtonEnabled="True" Height="40" Margin="5,1"  Width="408"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,30" HorizontalAlignment="Center">
-                        <Button x:Name="loginclick"  Foreground="White"   Width="100" Content="Login"/>
-                        <Button x:Name="cancel"    Foreground="White"  Width="100" Content="Cancel" />
-                    </StackPanel>
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text=" Sign Up with a new Account" FontSize="25"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </Popup>
         <Popup x:Name="editNodePopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding TargetNode}" >
             <Popup.ChildTransitions>
                 <TransitionCollection>
@@ -186,7 +168,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="Margin" Value="5" ></Setter>
                             <Setter Property="HorizontalAlignment" Value="Left"></Setter>
-                           
+
                             <Setter Property="FontSize" Value="26"></Setter>
                         </Style>
                         <Style TargetType="TextBox">
@@ -204,46 +186,41 @@
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
-
                     </Grid.RowDefinitions>
                     <TextBlock Text="Title" Margin="10" Foreground="White" />
                     <TextBox Grid.Column="1" TabIndex="0" x:Name="nodeTitle" Text="{Binding Mode=TwoWay,Path=Title}" ></TextBox>
-
-
                     <TextBlock Grid.Row="1"  Text="Description" Foreground="White" />
                     <TextBox  Grid.Row="1" TabIndex="1" Grid.Column="1" x:Name="nodeDescrition" Text="{Binding Mode=TwoWay,Path=Description}"   />
-
                     <Button Grid.Row="2" Grid.ColumnSpan="2" Margin="10,5,5,5" Click="EditContent" Foreground="White" Content="Edit content"/>
-
                     <Button Grid.Row="3" Click="NodeEditOK_Click" Margin="5,10,5,5"  Foreground="White"  Content="OK"/>
                 </Grid>
             </Border>
         </Popup>
 
-        <Popup x:Name="editContentPopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding NodeContent}">
+        <Popup Width="200" Height="200"   x:Name="editContentPopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding NodeContent}">
             <Popup.ChildTransitions>
                 <TransitionCollection >
                     <PaneThemeTransition />
                 </TransitionCollection>
             </Popup.ChildTransitions>
-            <Border BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" >
-                <Grid>
-                    
-                   
+            <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" BorderBrush="{StaticResource ApplicationForegroundThemeBrush}" BorderThickness="2" Background="{StaticResource ApplicationPageBackgroundThemeBrush}" >
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
                     <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                       
-
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
+                    <WebView  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DefaultBackgroundColor="#1D1D1D" Grid.Row="0" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='contentEditView'}"  x:Name="contentEditView"></WebView>
 
-                    <WebView Margin="10" Height="500" Width="500"  DefaultBackgroundColor="#1D1D1D" Grid.Row="0" Tag="{Binding Data, Converter={StaticResource WebContentConverter},ConverterParameter='contentEditView'}"  x:Name="contentEditView"></WebView>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <Button  Foreground="White" Click="ClosePopup" Content="OK"/>
+                        <AppBarButton Click="Bold" Icon="Bold" Label="Bold"></AppBarButton>
+                        <Slider Margin="8" Width="100" ValueChanged="ZoomSliderEditor_ValueChanged" Maximum="400" Minimum="70" Value="180"  ></Slider>
 
-                    <Button Grid.Row="1" Foreground="White" Click="ClosePopup" Content="OK"/>
+                    </StackPanel>
                 </Grid>
             </Border>
         </Popup>
-
+        <WebView Margin="5" HorizontalAlignment="Left" Grid.Row="1" Width="1200"  DataContext="{Binding NodeContent}"  MinHeight="200" DefaultBackgroundColor="#1D1D1D"  MinWidth="400" Tag="{Binding Data, Converter={StaticResource WebViewContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
     </Grid>
 
 </Page>

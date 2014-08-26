@@ -35,6 +35,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Common\SuspensionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\ObservableDictionary.cs" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrap.min.css" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrapblack.css" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\ContentTemplate.html" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\index.html" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\content.min.css" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\skin.min.css" />

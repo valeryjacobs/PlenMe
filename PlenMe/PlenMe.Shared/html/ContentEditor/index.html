@@ -14,8 +14,15 @@
     <script type="text/javascript" src="bootstrap.min.js"></script>
 
     <script type="text/javascript">
+
+        $('body,html').css('zoom', 180);
+
         tinymce.init({
             selector: "textarea",
+            menubar: false,
+            statusbar: false,
+            height:600,
+            toolbar:false,
             theme: "modern",
             style_formats: [
            { title: 'Bold text', inline: 'b' },
@@ -31,16 +38,9 @@
                 "searchreplace visualblocks visualchars code fullscreen",
                 "insertdatetime media nonbreaking save table contextmenu directionality",
                 "emoticons template paste textcolor colorpicker textpattern"
-            ],
-            toolbar1: "undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-      
-            image_advtab: true,
-            templates: [
-            {
-                title: "Template1",
-                url: "template1.html",
-                description: "Adds Editor Name and Staff ID"
-            }]
+            ]
+           
+           
         });
 
         function GetContent() {
@@ -50,6 +50,17 @@
         function SetContent(value) {
             tinyMCE.activeEditor.setContent(value, { format: 'raw' });
         }
+
+        function SetZoom(value) {
+            $('body,html').css('zoom', value);
+        }
+
+        function CallCommand(command) {
+            tinyMCE.execCommand(command);
+        }
+        
+
+
     </script>
 </head>
 <body style="height:100%">

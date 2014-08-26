@@ -6,7 +6,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using System.IO;
 using PlenMe.DataModel;
-
+using Windows.UI.Xaml.Controls;
+using System.Threading.Tasks;
 namespace PlenMe.Helpers
 {
     public class WebContentConverter : IValueConverter
@@ -14,18 +15,23 @@ namespace PlenMe.Helpers
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Windows.UI.Xaml.Controls.WebView webView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
+            if (value == null) return "";
 
-            if (webView == null)
-            {
-                webView = ControlLocater.ContentEditor;
-                Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/index.html");
-                webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
+                WebView webView = ControlLocater.ContentEditor;
 
-                webView.DOMContentLoaded += (x, y) => { webView.InvokeScript("SetContent", new string[] { value.ToString() }); };
-            }
-            
-            return "";
+
+                if (ControlLocater.ContentEditorReady)
+                {
+                   SetContentAsync(webView, value.ToString());
+                }
+                else
+                {
+                    Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/index.html");
+                    webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
+                    webView.DOMContentLoaded += async (x, y) => { await  SetContentAsync(webView, value.ToString()); };
+                    
+                }
+                return "";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -33,6 +39,13 @@ namespace PlenMe.Helpers
             return value;
         }
 
+        private async Task SetContentAsync(WebView webView, string value)
+        {
+
+           await webView.InvokeScriptAsync("SetContent", new string[] { value});
+           ControlLocater.ContentEditorReady = true;
+        }
+ 
 
         public static FrameworkElement FindDescendantByName(FrameworkElement element, string name)
         {

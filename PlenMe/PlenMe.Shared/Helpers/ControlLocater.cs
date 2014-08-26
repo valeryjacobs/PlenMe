@@ -1,19 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Windows.UI.Xaml.Controls;
 
 namespace PlenMe.Helpers
 {
     public static class ControlLocater
     {
-        private static Windows.UI.Xaml.Controls.WebView _contentEditor;
+        static ControlLocater()
+        {
+            //ContentViewerReady = false;
+            //ContentEditorReady = false;
+        }
+        public static bool ContentViewerReady { get; set; }
+        public static bool ContentEditorReady { get; set; }
+        private static WebView _contentEditor;
        
 
-        public static Windows.UI.Xaml.Controls.WebView ContentEditor
+        public static WebView ContentEditor
         {
             get { return _contentEditor; }
             set { _contentEditor = value; }
         }
+
+        private static WebView _contentViewer;
+
+        public static WebView ContentViewer
+        {
+            get { return _contentViewer; }
+            set { _contentViewer = value; }
+        }
+        
 
         private static StreamUriWinRTResolver _streamResolver;
 

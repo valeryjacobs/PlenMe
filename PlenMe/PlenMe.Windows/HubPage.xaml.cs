@@ -90,8 +90,7 @@ namespace PlenMe
             MobileServiceInvalidOperationException exception = null;
             try
             {
-                items = await contentTable
-                    .ToCollectionAsync();
+                items = await contentTable.Take(500).ToCollectionAsync();
             }
             catch (MobileServiceInvalidOperationException e)
             {
@@ -113,11 +112,11 @@ namespace PlenMe
                 //webView.Navigate(new Uri("http://www.tinymce.com/tryit/full.php"));
                 //webView.NavigateToString(items.Where(x => x.Id == "HTMLEditorTemplateTest").Single().Data);
 
-                
 
 
 
-                
+
+
             }
         }
 
@@ -144,7 +143,7 @@ namespace PlenMe
 
                 this.DefaultViewModel["MindMap"] = mindmaps[0];
 
-                var rootNode = new Node();
+                rootNode = new Node();
                 var tree = BuildTree(rootNode, json);
 
                 rootNode = tree;
@@ -187,6 +186,8 @@ namespace PlenMe
 
         private static JsonNode BuildJSON(JsonNode jsonNode, Node source)
         {
+            if (source == null) return null;
+
             var newNode = new JsonNode
             {
                 id = source.Id,
@@ -206,13 +207,40 @@ namespace PlenMe
             return newNode;
         }
 
+        private void Bold(object sender, RoutedEventArgs e)
+        {
+            contentEditView.InvokeScript("CallCommand", new string[] { "Bold" });
+        }
+
+        private void ZoomIn(object sender, RoutedEventArgs e)
+        {
+            webView.InvokeScript("SetZoom", new string[] { "200" });
+        }
+
+        private void ZoomOut(object sender, RoutedEventArgs e)
+        {
+            webView.InvokeScript("SetZoom", new string[] { "50" });
+        }
+
+        private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (ControlLocater.ContentViewerReady)
+                webView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+        }
+
+        private void ZoomSliderEditor_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (ControlLocater.ContentEditorReady)
+                contentEditView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+        }
+
+
+
         private void EditContent(object sender, RoutedEventArgs e)
         {
             if (!this.DefaultViewModel.ContainsKey("SelectedNode")) return;
 
             var targetNode = this.DefaultViewModel["SelectedNode"] as Node;
-
-            WebContentTemplate.HTML = ((List<Content>)this.defaultViewModel["ContentItems"]).Where(x=>x.Id == "HTMLEditorTemplate").Single().Data;
 
             if (targetNode.ContentId == null || targetNode.ContentId == "1")
             {
@@ -227,9 +255,13 @@ namespace PlenMe
 
             if (!editContentPopup.IsOpen)
             {
-
-                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
-                editContentPopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
+                contentEditView.Width = Window.Current.Bounds.Width - 100;
+                contentEditView.Height = Window.Current.Bounds.Height - 100;
+                editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
+                editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
+                contentEditView.InvokeScript("SetZoom", new string[] { "180" });
+                // editContentPopup.Width = Window.Current.Bounds.Width;
+                // editContentPopup.Height = Window.Current.Bounds.Height;
                 editContentPopup.IsOpen = true;
             }
         }
@@ -237,11 +269,13 @@ namespace PlenMe
         private async void ClosePopup(object sender, RoutedEventArgs e)
         {
 
-           string newContent = await  ControlLocater.ContentEditor.InvokeScriptAsync("GetContent",null);
+            string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
 
-           var selectedNode = (Node)this.defaultViewModel["SelectedNode"];
+            var selectedNode = (Node)this.defaultViewModel["SelectedNode"];
 
-           ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single().Data = newContent;
+            var updatedContent = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
+            updatedContent.Data = newContent;
+            await contentTable.UpdateAsync(updatedContent);
 
             editContentPopup.IsOpen = false;
         }
@@ -251,6 +285,8 @@ namespace PlenMe
 
         private void EditNode()
         {
+            if (!this.DefaultViewModel.ContainsKey("SelectedNode")) return;
+
             this.DefaultViewModel["TargetNode"] = this.DefaultViewModel["SelectedNode"];
             if (!editNodePopup.IsOpen)
             {
@@ -422,16 +458,7 @@ namespace PlenMe
             editNodePopup.IsOpen = false;
         }
 
-        private void ShowFlyoutPopup(object sender, RoutedEventArgs e)
-        {
-            if (!logincontrol1.IsOpen)
-            {
-                RootPopupBorder.Width = 646;
-                logincontrol1.HorizontalOffset = Window.Current.Bounds.Width / 2 - (RootPopupBorder.Width / 2);
-                logincontrol1.VerticalOffset = Window.Current.Bounds.Height / 2 - (RootPopupBorder.Height / 2);
-                logincontrol1.IsOpen = true;
-            }
-        }
+
 
         /// <summary>
         /// Gets the NavigationHelper used to aid in navigation and process lifetime management.
@@ -449,7 +476,7 @@ namespace PlenMe
             get { return this.defaultViewModel; }
         }
 
-   
+
 
         /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
@@ -513,6 +540,7 @@ namespace PlenMe
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             ControlLocater.ContentEditor = contentEditView;
+            ControlLocater.ContentViewer = webView;
             ControlLocater.StreamResolver = new StreamUriWinRTResolver();
 
             this.navigationHelper.OnNavigatedTo(e);
@@ -550,7 +578,22 @@ namespace PlenMe
                 this.DefaultViewModel["SubChildList"] = null;
             }
 
-            this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
+            SetContent(selectedNode.ContentId);
+        }
+
+
+        private void SetContent(string contentId)
+        {
+            List<Content> contentList = (List<Content>)this.DefaultViewModel["ContentItems"];
+
+            if (contentList.Exists(x => x.Id == contentId))
+            {
+                this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == contentId).Single();
+            }
+            else
+            {
+                this.DefaultViewModel["NodeContent"] = new Content { Id = contentId, Data = "Content with ID " + contentId + " not found." };
+            }
         }
 
         private void Child_Selected(object sender, SelectionChangedEventArgs e)
@@ -565,7 +608,7 @@ namespace PlenMe
             this.DefaultViewModel["ChildSelected"] = selectedNode;
             ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[1] = selectedNode;
             this.DefaultViewModel["SubChildList"] = selectedNode.Children;
-            this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
+            SetContent(selectedNode.ContentId);
         }
 
 
@@ -596,7 +639,7 @@ namespace PlenMe
 
             }
 
-            this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
+            SetContent(selectedNode.ContentId);
         }
     }
 }

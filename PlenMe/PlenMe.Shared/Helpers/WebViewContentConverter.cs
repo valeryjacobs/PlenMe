@@ -16,11 +16,21 @@ namespace PlenMe.Helpers
         {
             Windows.UI.Xaml.Controls.WebView webView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
 
-
             if (value == null) value = "";
             if (WebContentTemplate.HTML != null && webView != null)
             {
-                webView.NavigateToString(WebContentTemplate.HTML.Replace("[--CONTENT--]", value.ToString()));
+                if (ControlLocater.ContentViewerReady)
+                {
+                    webView.InvokeScript("SetContent", new string[] { value.ToString() });
+                }
+                else
+                {
+                    Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/ContentTemplate.html");
+                    webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
+
+                    webView.DOMContentLoaded += (x, y) => { webView.InvokeScript("SetContent", new string[] { value.ToString() }); };
+                    ControlLocater.ContentViewerReady = true;
+                }
             }
 
             return "";
