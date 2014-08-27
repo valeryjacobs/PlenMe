@@ -49,6 +49,8 @@ namespace PlenMe
         {
             streamResolver = new StreamUriWinRTResolver();
             this.InitializeComponent();
+
+            this.DefaultViewModel["MindMapLoading"] = true;
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
         }
@@ -111,12 +113,6 @@ namespace PlenMe
                 //this.ButtonSave.IsEnabled = true;
                 //webView.Navigate(new Uri("http://www.tinymce.com/tryit/full.php"));
                 //webView.NavigateToString(items.Where(x => x.Id == "HTMLEditorTemplateTest").Single().Data);
-
-
-
-
-
-
             }
         }
 
@@ -157,7 +153,7 @@ namespace PlenMe
                 this.DefaultViewModel["ChildSelected"] = null;
                 this.DefaultViewModel["SubChildSelected"] = null;
 
-
+                this.DefaultViewModel["MindMapLoading"] = false;
             }
         }
 
@@ -260,8 +256,6 @@ namespace PlenMe
                 editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
                 editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
                 contentEditView.InvokeScript("SetZoom", new string[] { "180" });
-                // editContentPopup.Width = Window.Current.Bounds.Width;
-                // editContentPopup.Height = Window.Current.Bounds.Height;
                 editContentPopup.IsOpen = true;
             }
         }

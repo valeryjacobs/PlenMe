@@ -20,7 +20,9 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-
+using Windows.Devices.Input;
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
 namespace PlenMe
@@ -48,6 +50,7 @@ namespace PlenMe
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
+       
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
         /// </summary>
