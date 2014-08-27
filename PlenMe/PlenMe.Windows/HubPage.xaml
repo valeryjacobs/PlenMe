@@ -178,7 +178,7 @@
             </Border>
         </Popup>
 
-        <Popup Width="200" Height="200"   x:Name="editContentPopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding NodeContent}">
+        <Popup Width="200" Height="200"   x:Name="editContentPopup" IsOpen="False" IsLightDismissEnabled="True" DataContext="{Binding SelectedNodeContent}">
             <Popup.ChildTransitions>
                 <TransitionCollection >
                     <PaneThemeTransition />
@@ -201,7 +201,7 @@
                 </Grid>
             </Border>
         </Popup>
-        <WebView Margin="5" HorizontalAlignment="Left" Grid.Row="1" Width="1200"  DataContext="{Binding SelectedNodeContent}"  MinHeight="200" DefaultBackgroundColor="Red"  MinWidth="400" Tag="{Binding Data, Converter={StaticResource WebViewContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
+        <WebView  Margin="5" HorizontalAlignment="Left" Grid.Row="1" Width="1200"  DataContext="{Binding SelectedNodeContent}"  MinHeight="200" DefaultBackgroundColor="Red"  MinWidth="400" Tag="{Binding Data, Converter={StaticResource WebViewContentConverter},ConverterParameter='webView'}"  x:Name="webView"></WebView>
     </Grid>
 
 </Page>

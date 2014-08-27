@@ -21,14 +21,16 @@ namespace PlenMe.Helpers
             {
                 if (ControlLocater.ContentViewerReady)
                 {
-                    webView.InvokeScript("SetContent", new string[] { value.ToString() });
+                    webView.InvokeScriptAsync("SetContent", new string[] { value.ToString() });
+
                 }
                 else
                 {
                     Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/ContentTemplate.html");
                     webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
 
-                    webView.DOMContentLoaded += (x, y) => { webView.InvokeScript("SetContent", new string[] { value.ToString() }); };
+                    webView.DOMContentLoaded += (x, y) => { webView.InvokeScriptAsync("SetContent", new string[] { value.ToString() }); };
+
                     ControlLocater.ContentViewerReady = true;
                 }
             }

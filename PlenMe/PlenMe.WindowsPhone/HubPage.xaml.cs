@@ -23,6 +23,8 @@ using Windows.UI.Xaml.Navigation;
 using Windows.Devices.Input;
 using Windows.Devices.Enumeration;
 using Windows.Media.Devices;
+using PlenMe.DataModel;
+using PlenMe.Helpers;
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
 namespace PlenMe
@@ -32,12 +34,17 @@ namespace PlenMe
     /// </summary>
     public sealed partial class HubPage : Page
     {
+        private StreamUriWinRTResolver streamResolver;
         private readonly NavigationHelper navigationHelper;
-        private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
+     
         private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+
+        private Domain domain;
 
         public HubPage()
         {
+            domain = App.Domain;
+            streamResolver = new StreamUriWinRTResolver();
             this.InitializeComponent();
 
             // Hub is only supported in Portrait orientation
@@ -59,13 +66,76 @@ namespace PlenMe
             get { return this.navigationHelper; }
         }
 
-        /// <summary>
-        /// Gets the view model for this <see cref="Page"/>.
-        /// This can be changed to a strongly typed view model.
-        /// </summary>
-        public ObservableDictionary DefaultViewModel
+        private void EditContent(object sender, RoutedEventArgs e)
         {
-            get { return this.defaultViewModel; }
+            EditContent();
+        }
+        
+        private void NodeEditOK_Click(object sender, RoutedEventArgs e)
+        {
+            // ((Node)this.DefaultViewModel["SelectedNode"]).Parent.Children.Add(new Node { Title="Test", Description="Tesst" , ContentId = "1"});
+
+            //// this.DefaultViewModel["ParentList"] = _rootNode.Children;
+            editNodePopup.IsOpen = false;
+        }
+
+        private void EditContent()
+        {
+
+            Domain.EditContent();
+
+
+            if (!editContentPopup.IsOpen)
+            {
+                contentEditView.Width = Window.Current.Bounds.Width - 100;
+                contentEditView.Height = Window.Current.Bounds.Height - 100;
+                editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
+                editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
+                contentEditView.InvokeScriptAsync("SetZoom", new string[] { "180" });
+                editContentPopup.IsOpen = true;
+            }
+        }
+
+        private async void ClosePopup(object sender, RoutedEventArgs e)
+        {
+            string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
+
+            App.Domain.UpdateContent(newContent);
+
+            editContentPopup.IsOpen = false;
+        }
+
+        private void Bold(object sender, RoutedEventArgs e)
+        {
+            contentEditView.InvokeScript("CallCommand", new string[] { "Bold" });
+        }
+
+        private void ZoomIn(object sender, RoutedEventArgs e)
+        {
+            webView.InvokeScript("SetZoom", new string[] { "200" });
+        }
+
+        private void ZoomOut(object sender, RoutedEventArgs e)
+        {
+            webView.InvokeScript("SetZoom", new string[] { "50" });
+        }
+
+        private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (ControlLocater.ContentViewerReady)
+                webView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+        }
+
+        private void ZoomSliderEditor_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            if (ControlLocater.ContentEditorReady)
+                contentEditView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+        }
+
+
+        public Domain Domain
+        {
+            get { return this.domain; }
         }
 
         /// <summary>
@@ -83,7 +153,7 @@ namespace PlenMe
         {
             // TODO: Create an appropriate data model for your problem domain to replace the sample data
             var sampleDataGroups = await SampleDataSource.GetGroupsAsync();
-            this.DefaultViewModel["Groups"] = sampleDataGroups;
+           // this.DefaultViewModel["Groups"] = sampleDataGroups;
         }
 
         /// <summary>
@@ -146,12 +216,39 @@ namespace PlenMe
         /// <param name="e">Event data that describes how this page was reached.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            ControlLocater.ContentEditor = contentEditView;
+            ControlLocater.ContentViewer = webView;
+            ControlLocater.StreamResolver = new StreamUriWinRTResolver();
+
             this.navigationHelper.OnNavigatedTo(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             this.navigationHelper.OnNavigatedFrom(e);
+        }
+
+        private void Parent_Selected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count == 0) return;
+
+            App.Domain.SelectParent((Node)e.AddedItems[0]);
+        }
+
+
+        private void Child_Selected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count == 0) return;
+
+            App.Domain.SelectChild((Node)e.AddedItems[0]);
+        }
+
+
+        private void SubChild_Selected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count == 0) return;
+
+            App.Domain.SelectSubChild((Node)e.AddedItems[0]);
         }
 
         #endregion
