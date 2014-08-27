@@ -34,13 +34,8 @@ namespace PlenMe
         private StreamUriWinRTResolver streamResolver;
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
-        public Node rootNode;
-        public MindMap currentMindMap;
 
-        private MobileServiceCollection<Content, Content> items;
-        private MobileServiceCollection<MindMap, MindMap> mindmaps;
-        private IMobileServiceTable<Content> contentTable = App.MobileService.GetTable<Content>();
-        private IMobileServiceTable<MindMap> mindmapTable = App.MobileService.GetTable<MindMap>();
+        public Domain Domain { get; set; }
 
         //private MobileServiceCollection<TodoItem, TodoItem> items;
         //private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
@@ -50,7 +45,7 @@ namespace PlenMe
             streamResolver = new StreamUriWinRTResolver();
             this.InitializeComponent();
 
-            this.DefaultViewModel["MindMapLoading"] = true;
+            this.DefaultViewModel["Initializing"] = Domain.Initializing;
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
         }
@@ -66,13 +61,13 @@ namespace PlenMe
                 switch (e.Key)
                 {
                     case Windows.System.VirtualKey.C:
-                        AddChildNode();
+                        Domain.AddChildNode();
                         break;
                     case Windows.System.VirtualKey.S:
-                        AddSiblingNode();
+                        Domain.AddSiblingNode();
                         break;
                     case Windows.System.VirtualKey.X:
-                        DeleteNode();
+                        Domain.DeleteNode();
                         break;
                     case Windows.System.VirtualKey.E:
                         EditNode();
@@ -85,122 +80,6 @@ namespace PlenMe
             }
 
 
-        }
-
-        private async void RefreshContentItems()
-        {
-            MobileServiceInvalidOperationException exception = null;
-            try
-            {
-                items = await contentTable.Take(500).ToCollectionAsync();
-            }
-            catch (MobileServiceInvalidOperationException e)
-            {
-                exception = e;
-            }
-
-            if (exception != null)
-            {
-                await new MessageDialog(exception.Message, "Error loading items").ShowAsync();
-            }
-            else
-            {
-
-                this.DefaultViewModel["ContentItems"] = items.ToList();
-
-                WebContentTemplate.HTML = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == "13").Single().Data;
-                // ListItems.ItemsSource = items;
-                //this.ButtonSave.IsEnabled = true;
-                //webView.Navigate(new Uri("http://www.tinymce.com/tryit/full.php"));
-                //webView.NavigateToString(items.Where(x => x.Id == "HTMLEditorTemplateTest").Single().Data);
-            }
-        }
-
-        private async void RefreshMindMap()
-        {
-            MobileServiceInvalidOperationException exception = null;
-            try
-            {
-                mindmaps = await mindmapTable.ToCollectionAsync();
-            }
-            catch (MobileServiceInvalidOperationException e)
-            {
-                exception = e;
-            }
-
-            if (exception != null)
-            {
-                await new MessageDialog(exception.Message, "Error loading mindmap data.").ShowAsync();
-            }
-            else
-            {
-                currentMindMap = mindmaps[0];
-                dynamic json = JValue.Parse(mindmaps[0].Content);
-
-                this.DefaultViewModel["MindMap"] = mindmaps[0];
-
-                rootNode = new Node();
-                var tree = BuildTree(rootNode, json);
-
-                rootNode = tree;
-                this.DefaultViewModel["RootNode"] = rootNode;
-                this.DefaultViewModel["ParentList"] = rootNode.Children;
-                this.DefaultViewModel["JSON"] = json;
-                this.DefaultViewModel["NodeContent"] = new Content { Data = "Test data" };
-                this.DefaultViewModel["SelectionStack"] = new Dictionary<int, Node>();
-
-                this.DefaultViewModel["ParentSelected"] = null;
-                this.DefaultViewModel["ChildSelected"] = null;
-                this.DefaultViewModel["SubChildSelected"] = null;
-
-                this.DefaultViewModel["MindMapLoading"] = false;
-            }
-        }
-
-
-        private static Node BuildTree(Node node, dynamic source)
-        {
-            var newNode = new Node
-            {
-                Id = source.id,
-                ContentId = source.cid,
-                Description = source.d,
-                Title = source.n,
-                Parent = node
-            };
-
-            if (source.c != null)
-            {
-                foreach (dynamic d in source.c)
-                {
-                    newNode.Children.Add(BuildTree(newNode, d));
-                }
-            }
-
-            return newNode;
-        }
-
-        private static JsonNode BuildJSON(JsonNode jsonNode, Node source)
-        {
-            if (source == null) return null;
-
-            var newNode = new JsonNode
-            {
-                id = source.Id,
-                cid = source.ContentId,
-                d = source.Description,
-                n = source.Title
-            };
-
-            if (source.Children != null)
-            {
-                foreach (Node n in source.Children)
-                {
-                    newNode.c.Add(BuildJSON(newNode, n));
-                }
-            }
-
-            return newNode;
         }
 
         private void Bold(object sender, RoutedEventArgs e)
@@ -231,7 +110,6 @@ namespace PlenMe
         }
 
 
-
         private void EditContent(object sender, RoutedEventArgs e)
         {
             if (!this.DefaultViewModel.ContainsKey("SelectedNode")) return;
@@ -240,14 +118,8 @@ namespace PlenMe
 
             if (targetNode.ContentId == null || targetNode.ContentId == "1")
             {
-                var newContent = new Content { Id = Guid.NewGuid().ToString() };
-
-                targetNode.ContentId = newContent.Id;
-                contentTable.InsertAsync(newContent);
-                ((List<Content>)this.DefaultViewModel["ContentItems"]).Add(newContent);
+                targetNode.ContentId = Domain.AddContent().Id;
             }
-
-
 
             if (!editContentPopup.IsOpen)
             {
@@ -262,26 +134,20 @@ namespace PlenMe
 
         private async void ClosePopup(object sender, RoutedEventArgs e)
         {
-
             string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
 
-            var selectedNode = (Node)this.defaultViewModel["SelectedNode"];
-
-            var updatedContent = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == selectedNode.ContentId).Single();
-            updatedContent.Data = newContent;
-            await contentTable.UpdateAsync(updatedContent);
+            Domain.UpdateContent(newContent);
 
             editContentPopup.IsOpen = false;
         }
 
         private void EditNode(object sender, RoutedEventArgs e)
-        { EditNode(); }
+        {
+            EditNode();
+        }
 
         private void EditNode()
         {
-            if (!this.DefaultViewModel.ContainsKey("SelectedNode")) return;
-
-            this.DefaultViewModel["TargetNode"] = this.DefaultViewModel["SelectedNode"];
             if (!editNodePopup.IsOpen)
             {
                 editNodePopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
@@ -294,82 +160,46 @@ namespace PlenMe
 
         private void DeleteNode(object sender, RoutedEventArgs e)
         {
-            DeleteNode();
+            Domain.DeleteNode();
         }
 
-        private void DeleteNode()
-        {
-            var nodeToBeRemoved = this.DefaultViewModel["SelectedNode"] as Node;
-
-            nodeToBeRemoved.Parent.Children.Remove(nodeToBeRemoved);
-        }
-
-        private void AddSiblingNode()
-        {
-            AddNode(false);
-        }
 
         private void AddSiblingNode(object sender, RoutedEventArgs e)
         {
-            AddNode(false);
+            Domain.AddSiblingNode();
         }
 
         private void AddChildNode(object sender, RoutedEventArgs e)
         {
-            AddChildNode();
-        }
-
-        private void AddChildNode()
-        {
-            AddNode(true);
+            Domain.AddChildNode();
         }
 
         private void Up(object sender, RoutedEventArgs e)
         {
-            Up();
+            Domain.MoveUp(); 
         }
 
         private void MoveOrderUp(object sender, RoutedEventArgs e)
         {
-            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
-            var index = targetNode.Parent.Children.IndexOf(targetNode);
-
-
-            if (index > 0)
-            {
-                targetNode.Parent.Children.Move(index, index - 1);
-            }
+            Domain.MoveOrderUp();
         }
 
         private void MoveOrderDown(object sender, RoutedEventArgs e)
         {
 
-            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
-            var index = targetNode.Parent.Children.IndexOf(targetNode);
-
-            if (index < targetNode.Parent.Children.Count() - 1)
-            {
-                targetNode.Parent.Children.Move(index, index + 1);
-            }
+            Domain.MoveOrderDown();
         }
 
         private void MoveUp(object sender, RoutedEventArgs e)
         {
-            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
-            targetNode.Parent.Parent.Children.Add(targetNode);
-            targetNode.Parent.Children.Remove(targetNode);
+            Domain.MoveUp();
         }
 
-        private void MoveDown(object sender, RoutedEventArgs e)
-        {
-            Node targetNode = (Node)this.DefaultViewModel["SelectedNode"];
-            targetNode.Parent.Parent.Children.Add(targetNode);
-            targetNode.Parent.Children.Remove(targetNode);
-        }
+       
 
         private void Up()
         {
-            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == rootNode) return;
+            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == Domain.RootNode) return;
 
             this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
             this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
@@ -383,66 +213,8 @@ namespace PlenMe
 
         private void Save(object sender, RoutedEventArgs e)
         {
-            Save();
+           Domain.Save();
         }
-
-        private async void Save()
-        {
-
-            var jsonRootNode = new JsonNode();
-            var jsonObject = BuildJSON(jsonRootNode, rootNode);
-
-            await mindmapTable.InsertAsync(new MindMap { Name = currentMindMap.Name + "_BACKUP", Id = Guid.NewGuid().ToString(), Content = currentMindMap.Content });
-
-
-            currentMindMap.Content = JsonConvert.SerializeObject(jsonObject);
-            //await App.MobileService.GetTable<Item>().InsertAsync(item);
-            UpdateMindMap(currentMindMap);
-        }
-
-        private async void UpdateMindMap(MindMap mindmap)
-        {
-            await mindmapTable.UpdateAsync(mindmap);
-        }
-
-
-
-        private void AddNode(bool addAsChild)
-        {
-            Node target = null;
-            if (this.DefaultViewModel.ContainsKey("SelectedNode") && this.DefaultViewModel["SelectedNode"] != null)
-                target = (Node)this.DefaultViewModel["SelectedNode"];
-
-            if (target == null)
-                target = rootNode;
-
-            var newNode = new Node { };
-            if (addAsChild)
-            {
-                newNode.Parent = target;
-                target.Children.Add(newNode);
-            }
-            else
-            {
-                if (target.Parent == null)
-                    return;
-
-                newNode.Parent = target.Parent;
-
-                target.Parent.Children.Add(newNode);
-            }
-
-            this.DefaultViewModel["TargetNode"] = newNode;
-
-            if (!editNodePopup.IsOpen)
-            {
-                editContentPopup.HorizontalOffset = (Window.Current.Bounds.Width / 2) - (editNodePopup.ActualWidth / 2);
-                editNodePopup.VerticalOffset = (Window.Current.Bounds.Height / 2) - (editNodePopup.ActualHeight / 2);
-                editNodePopup.IsOpen = true;
-                nodeTitle.Focus(FocusState.Keyboard);
-            }
-        }
-
 
         private void NodeEditOK_Click(object sender, RoutedEventArgs e)
         {
@@ -451,8 +223,6 @@ namespace PlenMe
             //// this.DefaultViewModel["ParentList"] = _rootNode.Children;
             editNodePopup.IsOpen = false;
         }
-
-
 
         /// <summary>
         /// Gets the NavigationHelper used to aid in navigation and process lifetime management.
@@ -485,12 +255,18 @@ namespace PlenMe
         /// session.  The state will be null the first time a page is visited.</param>
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            RefreshMindMap();
-            RefreshContentItems();
-            // TODO: Create an appropriate data model for your problem domain to replace the sample data
-            var sampleDataGroup = await SampleDataSource.GetGroupAsync("Group-4");
-            this.DefaultViewModel["Section3Items"] = sampleDataGroup;
+            Domain.Init();
 
+            this.DefaultViewModel["Domain"] = Domain;
+            //this.DefaultViewModel["MindMap"] = Domain.CurrentMindMap;
+            //this.DefaultViewModel["RootNode"] = Domain.RootNode;
+            //this.DefaultViewModel["ParentList"] = Domain.RootNode.Children;
+
+            //this.DefaultViewModel["NodeContent"] = new Content { Data = "Test data" };
+            //this.DefaultViewModel["ParentSelected"] = Domain.IsParentSelected;
+            //this.DefaultViewModel["ChildSelected"] = Domain.ChildSelected;
+            //this.DefaultViewModel["SubChildSelected"] = Domain.SubChildSelected;
+            //this.DefaultViewModel["Initializing"] = Domain.Initializing;
         }
 
         /// <summary>
@@ -542,7 +318,6 @@ namespace PlenMe
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            Save();
             this.navigationHelper.OnNavigatedFrom(e);
         }
 
@@ -552,57 +327,15 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-            var selectedNode = ((Node)e.AddedItems[0]);
-            if (selectedNode == null) return;
-
-            this.DefaultViewModel["SelectedNode"] = selectedNode;
-            this.DefaultViewModel["ParentSelected"] = selectedNode;
-
-            ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[0] = selectedNode;
-            this.DefaultViewModel["ChildList"] = selectedNode.Children;
-            // childListView.
-
-            if (selectedNode.Children != null && selectedNode.Children.Count > 0)
-            {
-                this.DefaultViewModel["SubChildList"] = selectedNode.Children[0].Children;
-
-            }
-            else
-            {
-                this.DefaultViewModel["SubChildList"] = null;
-            }
-
-            SetContent(selectedNode.ContentId);
+            Domain.SelectParent((Node)e.AddedItems[0]);
         }
 
-
-        private void SetContent(string contentId)
-        {
-            List<Content> contentList = (List<Content>)this.DefaultViewModel["ContentItems"];
-
-            if (contentList.Exists(x => x.Id == contentId))
-            {
-                this.DefaultViewModel["NodeContent"] = ((List<Content>)this.DefaultViewModel["ContentItems"]).Where(x => x.Id == contentId).Single();
-            }
-            else
-            {
-                this.DefaultViewModel["NodeContent"] = new Content { Id = contentId, Data = "Content with ID " + contentId + " not found." };
-            }
-        }
 
         private void Child_Selected(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count == 0) return;
 
-            var selectedNode = ((Node)e.AddedItems[0]);
-            if (selectedNode == null) return;
-
-
-            this.DefaultViewModel["SelectedNode"] = selectedNode;
-            this.DefaultViewModel["ChildSelected"] = selectedNode;
-            ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[1] = selectedNode;
-            this.DefaultViewModel["SubChildList"] = selectedNode.Children;
-            SetContent(selectedNode.ContentId);
+            Domain.SelectChild((Node)e.AddedItems[0]);
         }
 
 
@@ -610,30 +343,7 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-            var selectedNode = ((Node)e.AddedItems[0]);
-            if (selectedNode == null) return;
-
-            this.DefaultViewModel["SelectedNode"] = selectedNode;
-            this.DefaultViewModel["SubChildSelected"] = selectedNode;
-
-            ((Dictionary<int, Node>)this.DefaultViewModel["SelectionStack"])[2] = selectedNode;
-
-            if (selectedNode.Children != null && selectedNode.Children.Count > 0)
-            {
-                this.DefaultViewModel["ParentSelected"] = this.DefaultViewModel["ChildSelected"];
-                this.DefaultViewModel["ChildSelected"] = this.DefaultViewModel["SubChildSelected"];
-
-
-                if (selectedNode.Parent.Parent != null)
-                {
-                    this.DefaultViewModel["ParentList"] = selectedNode.Parent.Parent.Children;
-                }
-                this.DefaultViewModel["ChildList"] = selectedNode.Parent.Children;
-                this.DefaultViewModel["SubChildList"] = selectedNode.Children;
-
-            }
-
-            SetContent(selectedNode.ContentId);
+            Domain.SelectSubChild((Node)e.AddedItems[0]); 
         }
     }
 }
