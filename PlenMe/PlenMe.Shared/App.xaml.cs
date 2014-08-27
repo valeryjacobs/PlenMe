@@ -27,14 +27,11 @@ namespace PlenMe
     /// </summary>
     public sealed partial class App : Application
     {
+        public static Domain Domain { get; set; }
+
 #if WINDOWS_PHONE_APP
         private TransitionCollection transitions;
-#endif
-
-        public static MobileServiceClient MobileService = new MobileServiceClient(
-    "https://plenmejs.azure-mobile.net/",
-    "iYHFrWKdowybaaDDqetIVSgXxVGRnU90"
-);
+#endif        
 
         /// <summary>
         /// Initializes the singleton instance of the <see cref="App"/> class. This is the first line of authored code
@@ -43,6 +40,8 @@ namespace PlenMe
         public App()
         {
             this.InitializeComponent();
+            Domain = new PlenMe.Domain();
+            Domain.Init();
             this.Suspending += this.OnSuspending;
         }
 

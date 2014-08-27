@@ -97,6 +97,9 @@ namespace PlenMe
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
             // TODO: Save the unique state of the page here.
+            e.PageState["SelectedParentId"] = "a";
+            e.PageState["SelectedChildId"] = "b";
+            e.PageState["SelectedSubChildId"] = "b";
         }
 
         /// <summary>

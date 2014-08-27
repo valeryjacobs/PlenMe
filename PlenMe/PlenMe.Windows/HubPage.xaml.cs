@@ -35,17 +35,18 @@ namespace PlenMe
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
 
-        public Domain Domain { get; set; }
+        private Domain domain;
 
         //private MobileServiceCollection<TodoItem, TodoItem> items;
         //private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
 
         public HubPage()
         {
+            domain = App.Domain;
             streamResolver = new StreamUriWinRTResolver();
             this.InitializeComponent();
 
-            this.DefaultViewModel["Initializing"] = Domain.Initializing;
+           // this.DefaultViewModel["Initializing"] = Domain.Initializing;
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
         }
@@ -61,13 +62,13 @@ namespace PlenMe
                 switch (e.Key)
                 {
                     case Windows.System.VirtualKey.C:
-                        Domain.AddChildNode();
+                        App.Domain.AddChildNode();
                         break;
                     case Windows.System.VirtualKey.S:
-                        Domain.AddSiblingNode();
+                        App.Domain.AddSiblingNode();
                         break;
                     case Windows.System.VirtualKey.X:
-                        Domain.DeleteNode();
+                        App.Domain.DeleteNode();
                         break;
                     case Windows.System.VirtualKey.E:
                         EditNode();
@@ -118,7 +119,7 @@ namespace PlenMe
 
             if (targetNode.ContentId == null || targetNode.ContentId == "1")
             {
-                targetNode.ContentId = Domain.AddContent().Id;
+                targetNode.ContentId = App.Domain.AddContent().Id;
             }
 
             if (!editContentPopup.IsOpen)
@@ -136,7 +137,7 @@ namespace PlenMe
         {
             string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
 
-            Domain.UpdateContent(newContent);
+            App.Domain.UpdateContent(newContent);
 
             editContentPopup.IsOpen = false;
         }
@@ -160,46 +161,44 @@ namespace PlenMe
 
         private void DeleteNode(object sender, RoutedEventArgs e)
         {
-            Domain.DeleteNode();
+            App.Domain.DeleteNode();
         }
 
 
         private void AddSiblingNode(object sender, RoutedEventArgs e)
         {
-            Domain.AddSiblingNode();
+            App.Domain.AddSiblingNode();
         }
 
         private void AddChildNode(object sender, RoutedEventArgs e)
         {
-            Domain.AddChildNode();
+            App.Domain.AddChildNode();
         }
 
         private void Up(object sender, RoutedEventArgs e)
         {
-            Domain.MoveUp(); 
+            App.Domain.MoveUp(); 
         }
 
         private void MoveOrderUp(object sender, RoutedEventArgs e)
         {
-            Domain.MoveOrderUp();
+            App.Domain.MoveOrderUp();
         }
 
         private void MoveOrderDown(object sender, RoutedEventArgs e)
         {
 
-            Domain.MoveOrderDown();
+            App.Domain.MoveOrderDown();
         }
 
         private void MoveUp(object sender, RoutedEventArgs e)
         {
-            Domain.MoveUp();
+            App.Domain.MoveUp();
         }
-
-       
 
         private void Up()
         {
-            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == Domain.RootNode) return;
+            if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == App.Domain.RootNode) return;
 
             this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
             this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
@@ -213,7 +212,7 @@ namespace PlenMe
 
         private void Save(object sender, RoutedEventArgs e)
         {
-           Domain.Save();
+            App.Domain.Save();
         }
 
         private void NodeEditOK_Click(object sender, RoutedEventArgs e)
@@ -240,6 +239,11 @@ namespace PlenMe
             get { return this.defaultViewModel; }
         }
 
+        public Domain Domain
+        {
+            get { return this.domain; }
+        }
+
 
 
         /// <summary>
@@ -255,9 +259,9 @@ namespace PlenMe
         /// session.  The state will be null the first time a page is visited.</param>
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            Domain.Init();
+            //Domain.Init();
 
-            this.DefaultViewModel["Domain"] = Domain;
+            //this.DefaultViewModel["Domain"] = Domain;
             //this.DefaultViewModel["MindMap"] = Domain.CurrentMindMap;
             //this.DefaultViewModel["RootNode"] = Domain.RootNode;
             //this.DefaultViewModel["ParentList"] = Domain.RootNode.Children;
@@ -327,7 +331,7 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-            Domain.SelectParent((Node)e.AddedItems[0]);
+            App.Domain.SelectParent((Node)e.AddedItems[0]);
         }
 
 
@@ -335,7 +339,7 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-            Domain.SelectChild((Node)e.AddedItems[0]);
+            App.Domain.SelectChild((Node)e.AddedItems[0]);
         }
 
 
@@ -343,7 +347,7 @@ namespace PlenMe
         {
             if (e.AddedItems.Count == 0) return;
 
-            Domain.SelectSubChild((Node)e.AddedItems[0]); 
+            App.Domain.SelectSubChild((Node)e.AddedItems[0]); 
         }
     }
 }
