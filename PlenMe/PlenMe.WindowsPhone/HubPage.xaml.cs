@@ -98,7 +98,7 @@ namespace PlenMe
 
         private async void ClosePopup(object sender, RoutedEventArgs e)
         {
-            string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
+            string newContent = await ControlLocator.ContentEditor.InvokeScriptAsync("GetContent", null);
 
             App.Domain.UpdateContent(newContent);
 
@@ -112,23 +112,23 @@ namespace PlenMe
 
         private void ZoomIn(object sender, RoutedEventArgs e)
         {
-            webView.InvokeScript("SetZoom", new string[] { "200" });
+          //  webView.InvokeScript("SetZoom", new string[] { "200" });
         }
 
         private void ZoomOut(object sender, RoutedEventArgs e)
         {
-            webView.InvokeScript("SetZoom", new string[] { "50" });
+           // webView.InvokeScript("SetZoom", new string[] { "50" });
         }
 
         private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ControlLocater.ContentViewerReady)
-                webView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+            //if (ControlLocator.ContentViewerReady)
+             //   webView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
         }
 
         private void ZoomSliderEditor_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ControlLocater.ContentEditorReady)
+            if (ControlLocator.ContentEditorReady)
                 contentEditView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
         }
 
@@ -216,9 +216,9 @@ namespace PlenMe
         /// <param name="e">Event data that describes how this page was reached.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ControlLocater.ContentEditor = contentEditView;
-            ControlLocater.ContentViewer = webView;
-            ControlLocater.StreamResolver = new StreamUriWinRTResolver();
+            ControlLocator.ContentEditor = contentEditView;
+            //ControlLocator.ContentViewer = webView;
+            ControlLocator.StreamResolver = new StreamUriWinRTResolver();
 
             this.navigationHelper.OnNavigatedTo(e);
         }

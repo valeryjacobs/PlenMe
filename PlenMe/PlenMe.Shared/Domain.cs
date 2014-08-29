@@ -416,6 +416,20 @@ namespace PlenMe
             }
         }
 
+        private double _zoom;
+        public double Zoom
+        {
+            get
+            {
+                return _zoom;
+            }
+            set
+            {
+                _zoom = value;
+                NotifyPropertyChanged("Zoom");
+            }
+        }
+
         public Node SelectedChild { get; set; }
 
         public Node SelectedNode

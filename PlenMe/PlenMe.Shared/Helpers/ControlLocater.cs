@@ -1,21 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 namespace PlenMe.Helpers
 {
-    public static class ControlLocater
+    public sealed class ControlLocator
     {
-        static ControlLocater()
+        private static volatile ControlLocator instance;
+        private static object syncRoot = new Object();
+
+        private ControlLocator() { }
+
+        public static ControlLocator Instance
         {
-            //ContentViewerReady = false;
-            //ContentEditorReady = false;
+            get
+            {
+                if (instance == null)
+                {
+                    lock (syncRoot)
+                    {
+                        if (instance == null)
+                            instance = new ControlLocator();
+                    }
+                }
+
+                return instance;
+            }
         }
-        public static bool ContentViewerReady { get; set; }
+
+        public static bool ContentViewReady { get; set; }
         public static bool ContentEditorReady { get; set; }
         private static WebView _contentEditor;
-       
+
 
         public static WebView ContentEditor
         {
@@ -23,14 +42,14 @@ namespace PlenMe.Helpers
             set { _contentEditor = value; }
         }
 
-        private static WebView _contentViewer;
+        private static WebView _contentView;
 
-        public static WebView ContentViewer
+        public static WebView ContentView
         {
-            get { return _contentViewer; }
-            set { _contentViewer = value; }
+            get { return _contentView; }
+            set { _contentView = value; }
         }
-        
+
 
         private static StreamUriWinRTResolver _streamResolver;
 
@@ -41,7 +60,21 @@ namespace PlenMe.Helpers
             set { _streamResolver = value; }
         }
 
-        
-        
+        public static FrameworkElement FindDescendantByName(FrameworkElement element, string name)
+        {
+            if (element == null || string.IsNullOrWhiteSpace(name)) { return null; }
+
+            if (name.Equals(element.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return element;
+            }
+            var childCount = VisualTreeHelper.GetChildrenCount(element);
+            for (int i = 0; i < childCount; i++)
+            {
+                var result = (VisualTreeHelper.GetChild(element, i) as FrameworkElement).FindDescendantByName(name);
+                if (result != null) { return result; }
+            }
+            return null;
+        }
     }
 }

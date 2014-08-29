@@ -38,7 +38,7 @@
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrap.min.css" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\bootstrapblack.css" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\ContentTemplate.html" />
-    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\index.html" />
+    <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\Editor.html" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\content.min.css" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\skin.min.css" />
     <Content Include="$(MSBuildThisFileDirectory)html\ContentEditor\skins\lightgray\tinymce.eot" />

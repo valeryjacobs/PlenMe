@@ -14,24 +14,23 @@ namespace PlenMe.Helpers
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Windows.UI.Xaml.Controls.WebView webView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
-
+            if (ControlLocator.ContentView == null) ControlLocator.ContentView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
+           
             if (value == null) value = "";
-            if (WebContentTemplate.HTML != null && webView != null)
+            if (WebContentTemplate.HTML != null && ControlLocator.ContentView != null)
             {
-                if (ControlLocater.ContentViewerReady)
+                if (ControlLocator.ContentViewReady)
                 {
-                    webView.InvokeScriptAsync("SetContent", new string[] { value.ToString() });
-
+                    ControlLocator.ContentView.InvokeScriptAsync("SetContent", new string[] { value.ToString() });
                 }
                 else
                 {
-                    Uri url = webView.BuildLocalStreamUri("MyTag", "/ContentEditor/ContentTemplate.html");
-                    webView.NavigateToLocalStreamUri(url, ControlLocater.StreamResolver);
+                    Uri url = ControlLocator.ContentView.BuildLocalStreamUri("MyTag", "/ContentEditor/ContentTemplate.html");
+                    ControlLocator.ContentView.NavigateToLocalStreamUri(url, ControlLocator.StreamResolver);
 
-                    webView.DOMContentLoaded += (x, y) => { webView.InvokeScriptAsync("SetContent", new string[] { value.ToString() }); };
+                    ControlLocator.ContentView.DOMContentLoaded += (x, y) => { ControlLocator.ContentView.InvokeScriptAsync("SetContent", new string[] { value.ToString() }); };
 
-                    ControlLocater.ContentViewerReady = true;
+                    ControlLocator.ContentViewReady = true;
                 }
             }
 

@@ -47,11 +47,16 @@ namespace PlenMe
             domain = App.Domain;
             streamResolver = new StreamUriWinRTResolver();
             this.InitializeComponent();
-
-            // this.DefaultViewModel["Initializing"] = Domain.Initializing;
+             
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
         }
+
+        void Hub_Loaded(object sender, RoutedEventArgs e)
+        {
+           
+
+         }
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
@@ -91,36 +96,35 @@ namespace PlenMe
                     case VirtualKey.Left:
                         if (e.Key == VirtualKey.Control)
                             App.Domain.MoveUp();
-                        break;  
+                        break;
                 }
             }
         }
 
         private void Bold(object sender, RoutedEventArgs e)
         {
-            contentEditView.InvokeScript("CallCommand", new string[] { "Bold" });
+           ControlLocator.ContentView.InvokeScript("CallCommand", new string[] { "Bold" });
         }
 
         private void ZoomIn(object sender, RoutedEventArgs e)
         {
-            webView.InvokeScript("SetZoom", new string[] { "200" });
+            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "200" });
         }
 
         private void ZoomOut(object sender, RoutedEventArgs e)
         {
-            webView.InvokeScript("SetZoom", new string[] { "50" });
+            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "200" });
         }
 
         private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ControlLocater.ContentViewerReady)
-                webView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { (e.NewValue / 100).ToString() });
         }
 
         private void ZoomSliderEditor_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ControlLocater.ContentEditorReady)
-                contentEditView.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
+            if (ControlLocator.ContentEditorReady)
+                ControlLocator.ContentEditor.InvokeScript("SetZoom", new string[] { (e.NewValue / 100).ToString() });
         }
 
         private void EditContent(object sender, RoutedEventArgs e)
@@ -130,28 +134,26 @@ namespace PlenMe
 
         private void EditContent()
         {
-
+            editSection.Width = Window.Current.Bounds.Width;
             Domain.EditContent();
+            Hub.ScrollToSection(editSection);
 
+            //if (!editContentPopup.IsOpen)
+            //{
+            //    ControlLocator.ContentView.Width = Window.Current.Bounds.Width - 100;
+            //    ControlLocator.ContentView.Height = Window.Current.Bounds.Height - 100;
+            //    editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
+            //    editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
+            //    ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "180" });
+            //    editContentPopup.IsOpen = true;
+            //}
+        }        
 
-            if (!editContentPopup.IsOpen)
-            {
-                contentEditView.Width = Window.Current.Bounds.Width - 100;
-                contentEditView.Height = Window.Current.Bounds.Height - 100;
-                editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
-                editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
-                contentEditView.InvokeScriptAsync("SetZoom", new string[] { "180" });
-                editContentPopup.IsOpen = true;
-            }
-        }
-
-        private async void ClosePopup(object sender, RoutedEventArgs e)
+        private async void Confirm(object sender, RoutedEventArgs e)
         {
-            string newContent = await ControlLocater.ContentEditor.InvokeScriptAsync("GetContent", null);
+            string newContent = await ControlLocator.ContentEditor.InvokeScriptAsync("GetContent", null);
 
             App.Domain.UpdateContent(newContent);
-
-            editContentPopup.IsOpen = false;
         }
 
         private void EditNode(object sender, RoutedEventArgs e)
@@ -222,7 +224,7 @@ namespace PlenMe
 
         private void Up(object sender, RoutedEventArgs e)
         {
-            App.Domain.MoveUp();
+            App.Domain.NavigateUp();
         }
 
         private void MoveOrderUp(object sender, RoutedEventArgs e)
@@ -243,15 +245,15 @@ namespace PlenMe
 
         private void Up()
         {
-        //    if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == App.Domain.RootNode) return;
+            //    if (((Node)this.DefaultViewModel["ParentSelected"]).Parent == App.Domain.RootNode) return;
 
-        //    this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
-        //    this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
-        //    this.DefaultViewModel["ParentList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Parent.Children;
+            //    this.DefaultViewModel["SubChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Children;
+            //    this.DefaultViewModel["ChildList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Children;
+            //    this.DefaultViewModel["ParentList"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent.Parent.Parent.Children;
 
-        //    this.DefaultViewModel["SubChildSelected"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent;
-        //    this.DefaultViewModel["ChildSelected"] = ((Node)this.DefaultViewModel["ChildSelected"]).Parent;
-        //    this.DefaultViewModel["ParentSelected"] = ((Node)this.DefaultViewModel["ParentSelected"]).Parent;
+            //    this.DefaultViewModel["SubChildSelected"] = ((Node)this.DefaultViewModel["SubChildSelected"]).Parent;
+            //    this.DefaultViewModel["ChildSelected"] = ((Node)this.DefaultViewModel["ChildSelected"]).Parent;
+            //    this.DefaultViewModel["ParentSelected"] = ((Node)this.DefaultViewModel["ParentSelected"]).Parent;
         }
 
 
@@ -276,7 +278,7 @@ namespace PlenMe
             get { return this.navigationHelper; }
         }
 
-     
+
 
         public Domain Domain
         {
@@ -298,18 +300,7 @@ namespace PlenMe
         /// session.  The state will be null the first time a page is visited.</param>
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            //Domain.Init();
-
-            //this.DefaultViewModel["Domain"] = Domain;
-            //this.DefaultViewModel["MindMap"] = Domain.CurrentMindMap;
-            //this.DefaultViewModel["RootNode"] = Domain.RootNode;
-            //this.DefaultViewModel["ParentList"] = Domain.RootNode.Children;
-
-            //this.DefaultViewModel["NodeContent"] = new Content { Data = "Test data" };
-            //this.DefaultViewModel["ParentSelected"] = Domain.IsParentSelected;
-            //this.DefaultViewModel["ChildSelected"] = Domain.ChildSelected;
-            //this.DefaultViewModel["SubChildSelected"] = Domain.SubChildSelected;
-            //this.DefaultViewModel["Initializing"] = Domain.Initializing;
+           
         }
 
         /// <summary>
@@ -352,9 +343,9 @@ namespace PlenMe
         /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ControlLocater.ContentEditor = contentEditView;
-            ControlLocater.ContentViewer = webView;
-            ControlLocater.StreamResolver = new StreamUriWinRTResolver();
+          //  ControlLocator.ContentEditor = contentEditor;
+            
+            ControlLocator.StreamResolver = new StreamUriWinRTResolver();
 
             this.navigationHelper.OnNavigatedTo(e);
         }
