@@ -44,7 +44,8 @@ namespace PlenMe.Helpers
         private async Task SetContentAsync(WebView webView, string value)
         {
             await webView.InvokeScriptAsync("SetContent", new string[] { value });
-            await webView.InvokeScriptAsync("SetZoom", new string[] { "180" });
+            await webView.InvokeScriptAsync("SetViewSize", new string[] { "200", "200" });
+            await webView.InvokeScriptAsync("SetZoom", new string[] { "1.8" });
             ControlLocator.ContentEditorReady = true;
         }
 

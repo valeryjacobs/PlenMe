@@ -91,7 +91,6 @@ namespace PlenMe
                 contentEditView.Height = Window.Current.Bounds.Height - 100;
                 editContentPopup.HorizontalOffset = ((Window.Current.Bounds.Width / 2) * -1) + 200;
                 editContentPopup.VerticalOffset = ((Window.Current.Bounds.Height / 2) * -1) + 230;
-                contentEditView.InvokeScriptAsync("SetZoom", new string[] { "180" });
                 editContentPopup.IsOpen = true;
             }
         }

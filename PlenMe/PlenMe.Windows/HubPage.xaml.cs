@@ -108,12 +108,12 @@ namespace PlenMe
 
         private void ZoomIn(object sender, RoutedEventArgs e)
         {
-            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "200" });
+            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "2" });
         }
 
         private void ZoomOut(object sender, RoutedEventArgs e)
         {
-            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "200" });
+            ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { "0.1" });
         }
 
         private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
