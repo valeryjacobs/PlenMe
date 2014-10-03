@@ -6,6 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using System.IO;
 using PlenMe.DataModel;
+using Windows.UI.Xaml.Controls;
 
 namespace PlenMe.Helpers
 {
@@ -15,11 +16,14 @@ namespace PlenMe.Helpers
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (ControlLocator.ContentView == null) ControlLocator.ContentView = (Windows.UI.Xaml.Controls.WebView)FindDescendantByName((FrameworkElement)Window.Current.Content, parameter.ToString());
-           
+
+            ControlLocator.ContentView.Height = ((Grid)ControlLocator.ContentView.Parent).Height;
+
+
             if (value == null) value = "";
             if (WebContentTemplate.HTML != null && ControlLocator.ContentView != null)
             {
-                if (ControlLocator.ContentViewReady)
+                if (ControlLocator.ContentViewReady && ControlLocator.ContentView.Source.LocalPath == "/ContentEditor/ContentTemplate.html")
                 {
                     ControlLocator.ContentView.InvokeScriptAsync("SetContent", new string[] { value.ToString() });
                 }
@@ -28,7 +32,9 @@ namespace PlenMe.Helpers
                     Uri url = ControlLocator.ContentView.BuildLocalStreamUri("MyTag", "/ContentEditor/ContentTemplate.html");
                     ControlLocator.ContentView.NavigateToLocalStreamUri(url, ControlLocator.StreamResolver);
 
-                    ControlLocator.ContentView.DOMContentLoaded += (x, y) => { ControlLocator.ContentView.InvokeScriptAsync("SetContent", new string[] { value.ToString() }); };
+                    ControlLocator.ContentView.DOMContentLoaded += (x, y) => {
+                        ControlLocator.ContentView.InvokeScriptAsync("SetContent", new string[] { value.ToString() });
+                    };
 
                     ControlLocator.ContentViewReady = true;
                 }

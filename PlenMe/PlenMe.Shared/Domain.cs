@@ -234,6 +234,8 @@ namespace PlenMe
 
         public void MoveUp()
         {
+            if (SelectedNode.Parent.Parent == null) return;
+
             SelectedNode.Parent.Parent.Children.Add(SelectedNode);
             SelectedNode.Parent.Children.Remove(SelectedNode);
             SelectedNode.Parent = SelectedNode.Parent.Parent;
@@ -344,9 +346,8 @@ namespace PlenMe
 
         public async void UpdateContent(string newContent)
         {
-            Content instance = Enumerable.Single<Content>((IEnumerable<Content>)(from x in (IEnumerable<Content>)_items select x));
-            instance.Data = newContent;
-            await _contentTable.UpdateAsync(instance);
+            SelectedNodeContent.Data = newContent;
+            await _contentTable.UpdateAsync(SelectedNodeContent);
         }
 
         private async void UpdateMindMap(MindMap mindmap)

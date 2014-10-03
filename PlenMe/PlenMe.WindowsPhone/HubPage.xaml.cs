@@ -216,7 +216,7 @@ namespace PlenMe
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             ControlLocator.ContentEditor = contentEditView;
-            //ControlLocator.ContentViewer = webView;
+            ControlLocator.ContentView = contentView;
             ControlLocator.StreamResolver = new StreamUriWinRTResolver();
 
             this.navigationHelper.OnNavigatedTo(e);

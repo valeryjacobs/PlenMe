@@ -103,7 +103,7 @@ namespace PlenMe
 
         private void Bold(object sender, RoutedEventArgs e)
         {
-           ControlLocator.ContentView.InvokeScript("CallCommand", new string[] { "Bold" });
+           ControlLocator.ContentEditor.InvokeScript("CallCommand", new string[] { "Bold" });
         }
 
         private void ZoomIn(object sender, RoutedEventArgs e)
@@ -118,6 +118,7 @@ namespace PlenMe
 
         private void ZoomSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
+            if (ControlLocator.ContentView == null) return;
             ControlLocator.ContentView.InvokeScriptAsync("SetZoom", new string[] { (e.NewValue / 100).ToString() });
         }
 
@@ -136,7 +137,7 @@ namespace PlenMe
         {
             editSection.Width = Window.Current.Bounds.Width;
             Domain.EditContent();
-            Hub.ScrollToSection(editSection);
+            //Hub.ScrollToSection(editSection);
 
             //if (!editContentPopup.IsOpen)
             //{
